@@ -1,40 +1,67 @@
-"use client";
-
+import { connection } from "next/server";
 import { Shell } from "@/components/shell";
 import { PageHeader, StatusBadge } from "@/components/ui";
-import { DataTable } from "@/components/datatable";
+import { supabaseServer } from "@/lib/supabase-server";
 
-const ROWS = [
-  { id: "1", when: "13 Nov 09:12", actor: "Registry Admin", action: "Created draft v8 from v7", detail: "12 sessions moved", kind: "version" },
-  { id: "2", when: "13 Nov 08:47", actor: "Registry Admin", action: "Locked CS302 Mon P1–P2", detail: "H11 lock", kind: "edit" },
-  { id: "3", when: "12 Nov 16:20", actor: "Registry Admin", action: "Overrode soft preference ML401 Wed P8–P9", detail: "Reason logged: Lab-A only free slot", kind: "override" },
-  { id: "4", when: "12 Nov 15:02", actor: "System", action: "Solve job #41 finished", detail: "score 96.0, 0 hard clashes", kind: "solve" },
-  { id: "5", when: "10 Nov 17:40", actor: "Registry Admin", action: "Published v7", detail: "1,170 students notified", kind: "publish" },
-  { id: "6", when: "9 Nov 11:05", actor: "Dr. Yamak", action: "Updated availability", detail: "Wed P8–P9 → unavailable", kind: "availability" },
-];
+export const instant = false;
 
-export default function RegistryAudit() {
+export default async function RegistryAudit() {
+  await connection();
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) {
+    return (
+      <Shell role="registry" active="/registry/audit">
+        <PageHeader title="Audit Log" sub="Sign in to view." />
+      </Shell>
+    );
+  }
+  const { data: profile } = await sb.from("profiles").select("university_id").eq("id", user.id).single();
+  const uni = (profile as { university_id: string } | null)?.university_id;
+  const { data: sems } = await sb.from("semesters").select("id,name").eq("university_id", uni).order("created_at", { ascending: false }).limit(1);
+  const sem = ((sems ?? []) as { id: string; name: string }[])[0];
+  const { data: log } = sem
+    ? await sb
+        .from("change_log")
+        .select("id,action,reason,created_at,actor,version_id,timetable_versions(created_at)")
+        .eq("university_id", uni)
+        .order("created_at", { ascending: false })
+        .limit(100)
+    : { data: [] };
+  const rows = (log ?? []) as { id: string; action: string; reason: string | null; created_at: string; actor: string | null }[];
+
   return (
     <Shell role="registry" active="/registry/audit">
-      <PageHeader title="Audit Log" sub="Every change to Semester 1 2026/27, kept for at least a year. Overrides always carry a reason." />
-      <DataTable
-        rows={ROWS}
-        searchPlaceholder="Search actor, action…"
-        columns={[
-          { key: "when", header: "When", render: (r) => <span className="whitespace-nowrap text-muted">{r.when}</span> },
-          { key: "actor", header: "Actor", render: (r) => r.actor },
-          {
-            key: "action", header: "Action",
-            render: (r) => (
-              <span>
-                {r.action}
-                {r.kind === "override" && <StatusBadge tone="warn">override</StatusBadge>}
-              </span>
-            ),
-          },
-          { key: "detail", header: "Detail", render: (r) => <span className="text-muted">{r.detail}</span> },
-        ]}
-      />
+      <PageHeader title="Audit Log" sub={`Every change${sem ? ` to ${sem.name}` : ""}, kept for at least a year. Overrides always carry a reason.`} />
+      {rows.length === 0 ? (
+        <p className="border border-dashed border-line bg-paper p-6 text-center text-[13px] text-muted">
+          No changes logged yet. Edits in the editor write here automatically.
+        </p>
+      ) : (
+        <table className="w-full border border-line bg-paper text-[13px]">
+          <thead>
+            <tr className="border-b border-line bg-canvas-2 text-left text-muted">
+              <th className="px-3 py-2 font-medium">When</th>
+              <th className="px-3 py-2 font-medium">Action</th>
+              <th className="px-3 py-2 font-medium">Reason</th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-b border-line last:border-0">
+                <td className="whitespace-nowrap px-3 py-2 text-muted">{new Date(r.created_at).toLocaleString()}</td>
+                <td className="px-3 py-2">
+                  {r.action}
+                  {r.action.toLowerCase().includes("override") && <StatusBadge tone="warn">override</StatusBadge>}
+                </td>
+                <td className="px-3 py-2 text-muted">{r.reason ?? "—"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </Shell>
   );
 }

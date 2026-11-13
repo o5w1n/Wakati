@@ -2,82 +2,99 @@ import Link from "next/link";
 import { Shell } from "@/components/shell";
 import { PageHeader, MetricCard, StatusBadge, Field } from "@/components/ui";
 import { inputCls, btnPrimaryCls, btnSecondaryCls } from "@/components/ui";
+import { supabaseServer } from "@/lib/supabase-server";
+import { setInstitutionStatus, updateInstitution } from "@/app/actions/admin";
 
-const DETAIL: Record<string, { name: string; code: string; status: "Active" | "Pending" | "Suspended"; domain: string; admin: string; adminEmail: string; registered: string; members: string; lecturers: string; students: string; semesters: string; solves: string }> = {
-  ac: { name: "Academic City University", code: "AC", status: "Active", domain: "acity.edu.gh", admin: "Registry Admin", adminEmail: "registry@acity.edu.gh", registered: "12 Oct 2026", members: "1,240", lecturers: "58", students: "1,170", semesters: "3", solves: "42" },
-  ash: { name: "Ashesi University", code: "ASH", status: "Active", domain: "ashesi.edu.gh", admin: "E. Owusu", adminEmail: "registry@ashesi.edu.gh", registered: "28 Oct 2026", members: "860", lecturers: "44", students: "810", semesters: "1", solves: "9" },
-  htu: { name: "Ho Technical University", code: "HTU", status: "Pending", domain: "htu.edu.gh", admin: "—", adminEmail: "—", registered: "9 Nov 2026", members: "—", lecturers: "—", students: "—", semesters: "0", solves: "0" },
-  vvu: { name: "Valley View University", code: "VVU", status: "Suspended", domain: "vvu.edu.gh", admin: "D. Mensimah", adminEmail: "registry@vvu.edu.gh", registered: "3 Sep 2026", members: "312", lecturers: "21", students: "288", semesters: "1", solves: "6" },
-};
-
-export function generateStaticParams() {
-  return Object.keys(DETAIL).map((code) => ({ code }));
-}
+export const instant = false;
 
 export default async function InstitutionDetail({ params }: { params: Promise<{ code: string }> }) {
   const { code } = await params;
-  const u = DETAIL[code] ?? DETAIL.ac;
+  const sb = await supabaseServer();
+  const { data: uni } = await sb.from("universities").select("id,name,short_code,domain,status,created_at").eq("id", code).single();
+  const u = uni as { id: string; name: string; short_code: string; domain: string | null; status: string; created_at: string } | null;
+  if (!u) {
+    return (
+      <Shell role="superadmin" active="/admin">
+        <PageHeader title="Not found" sub="No institution with that id." actions={<Link href="/admin" className={btnSecondaryCls}>← All institutions</Link>} />
+      </Shell>
+    );
+  }
+  const { count: members } = await sb.from("profiles").select("id", { count: "exact", head: true }).eq("university_id", u.id);
+  const { count: semesters } = await sb.from("semesters").select("id", { count: "exact", head: true }).eq("university_id", u.id);
+  const { data: admins } = await sb.from("profiles").select("email,full_name").eq("university_id", u.id).eq("role", "timetable_admin").limit(3);
+  const adminList = (admins ?? []) as { email: string; full_name: string | null }[];
+
   return (
     <Shell role="superadmin" active="/admin">
       <PageHeader
         title={u.name}
-        sub={`${u.code} · registered ${u.registered}`}
+        sub={`${u.short_code} · registered ${new Date(u.created_at).toLocaleDateString()}`}
         actions={
           <>
             <Link href="/admin" className={btnSecondaryCls}>← All institutions</Link>
-            {u.status === "Pending" ? (
+            {u.status === "pending" ? (
               <>
-                <button className={btnSecondaryCls}>Reject</button>
-                <button className={btnPrimaryCls}>Approve & activate</button>
+                <form action={async () => { await setInstitutionStatus(u.id, "active"); }}>
+                  <button className={btnPrimaryCls}>Approve & activate</button>
+                </form>
+                <form action={async () => { await setInstitutionStatus(u.id, "suspended"); }}>
+                  <button className={btnSecondaryCls}>Reject</button>
+                </form>
               </>
-            ) : u.status === "Active" ? (
-              <button className={btnSecondaryCls}>Suspend</button>
+            ) : u.status === "active" ? (
+              <form action={async () => { await setInstitutionStatus(u.id, "suspended"); }}>
+                <button className={btnSecondaryCls}>Suspend</button>
+              </form>
             ) : (
-              <button className={btnPrimaryCls}>Reactivate</button>
+              <form action={async () => { await setInstitutionStatus(u.id, "active"); }}>
+                <button className={btnPrimaryCls}>Reactivate</button>
+              </form>
             )}
           </>
         }
       />
       <div className="mb-3">
-        <StatusBadge tone={u.status === "Active" ? "ok" : u.status === "Pending" ? "warn" : "bad"}>{u.status}</StatusBadge>
-        {u.status === "Suspended" && (
+        <StatusBadge tone={u.status === "active" ? "ok" : u.status === "pending" ? "warn" : "bad"}>{u.status}</StatusBadge>
+        {u.status === "suspended" && (
           <span className="ml-2 text-[13px] text-muted">Tenant is read-only: sign-ins blocked, no new solves.</span>
         )}
       </div>
 
       <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Members" value={u.members} sub={`${u.lecturers} lecturers · ${u.students} students`} />
-        <MetricCard label="Semesters" value={u.semesters} />
-        <MetricCard label="Solver runs" value={u.solves} sub="all time" />
-        <MetricCard label="Admin" value={u.admin} sub={u.adminEmail} />
+        <MetricCard label="Members" value={String(members ?? 0)} />
+        <MetricCard label="Semesters" value={String(semesters ?? 0)} />
+        <MetricCard label="Admins" value={String(adminList.length)} sub={adminList.map((a) => a.email).join(", ") || "none"} />
+        <MetricCard label="Domain" value={u.domain ?? "—"} sub="signup domain lock" />
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
         <section className="border border-line bg-paper p-4">
           <div className="mb-4 text-sm font-medium text-ink">Institution settings</div>
-          <div className="space-y-3">
-            <Field label="Email domain" hint="Members must sign up with this domain.">
-              <input defaultValue={u.domain} className={inputCls} />
+          <form action={async (f: FormData) => { await updateInstitution(f); }} className="space-y-3">
+            <input type="hidden" name="id" value={u.id} />
+            <Field label="Name">
+              <input name="name" defaultValue={u.name} className={inputCls} />
             </Field>
-            <Field label="Short code">
-              <input defaultValue={u.code} className={`${inputCls} uppercase`} maxLength={8} />
+            <Field label="Email domain" hint="Members must sign up with this domain.">
+              <input name="domain" defaultValue={u.domain ?? ""} className={inputCls} />
             </Field>
             <button className={btnPrimaryCls}>Save changes</button>
-          </div>
+          </form>
         </section>
 
         <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Reassign admin</div>
-          <div className="space-y-3">
-            <Field label="New admin email" hint="Must already be a member of this institution.">
-              <input placeholder="person@…edu.gh" className={inputCls} />
-            </Field>
-            <Field label="Reason" hint="Logged in the audit trail.">
-              <input placeholder="Staff change at the Registry…" className={inputCls} />
-            </Field>
-            <button className={btnSecondaryCls}>Transfer admin role</button>
-          </div>
-          {u.status === "Suspended" && (
+          <div className="mb-4 text-sm font-medium text-ink">Admins</div>
+          {adminList.length === 0 ? (
+            <p className="text-[13px] text-muted">No timetable_admin on record — the registering user may not have completed signup.</p>
+          ) : (
+            adminList.map((a) => (
+              <div key={a.email} className="border-b border-line py-2 text-[13px] last:border-0">
+                <span className="font-medium text-ink">{a.full_name ?? a.email}</span>
+                <span className="mt-0.5 block text-muted">{a.email}</span>
+              </div>
+            ))
+          )}
+          {u.status === "suspended" && (
             <p className="mt-4 border-t border-line pt-3 text-xs text-muted">
               Suspension is reversible and non-destructive: data is kept, placements stay published read-only.
             </p>

@@ -1,76 +1,59 @@
-"use client";
-
-import { useState } from "react";
+import { connection } from "next/server";
 import { Shell } from "@/components/shell";
 import { PageHeader, StatusBadge, Field } from "@/components/ui";
 import { btnSecondaryCls, inputCls } from "@/components/ui";
 import { Download, FileSpreadsheet, FileText } from "lucide-react";
+import { supabaseServer } from "@/lib/supabase-server";
+import { ExportForm } from "./form";
 
-const HISTORY = [
-  { id: "1", what: "Full grid — v7 (PDF)", by: "Registry Admin", when: "10 Nov 17:52", size: "184 KB" },
-  { id: "2", what: "Per-lecturer sheets — v7 (Excel)", by: "Registry Admin", when: "10 Nov 17:53", size: "96 KB" },
-  { id: "3", what: "Room utilisation — v7 (PDF)", by: "Registry Admin", when: "8 Nov 10:14", size: "72 KB" },
-];
+export const instant = false;
 
-export default function Exports() {
-  const [done, setDone] = useState<string | null>(null);
-  const run = (label: string) => setDone(label);
+export default async function Exports() {
+  await connection();
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) {
+    return (
+      <Shell role="registry" active="/registry/exports">
+        <PageHeader title="Exports" sub="Sign in to export." />
+      </Shell>
+    );
+  }
+  const { data: profile } = await sb.from("profiles").select("university_id").eq("id", user.id).single();
+  const uni = (profile as { university_id: string } | null)?.university_id;
+  const { data: sems } = await sb.from("semesters").select("id,name").eq("university_id", uni).order("created_at", { ascending: false }).limit(1);
+  const sem = ((sems ?? []) as { id: string; name: string }[])[0];
+  const { data: vers } = sem
+    ? await sb.from("timetable_versions").select("id,status,created_at").eq("semester_id", sem.id).order("created_at", { ascending: false }).limit(5)
+    : { data: [] };
+  const versions = (vers ?? []) as { id: string; status: string; created_at: string }[];
+  const current = versions[0];
+
   return (
     <Shell role="registry" active="/registry/exports">
-      <PageHeader title="Exports" sub="Published version v7. Drafts export with a DRAFT watermark." />
-      {done && (
-        <div className="mb-4 border border-line border-l-4 border-l-indigo-deep bg-paper p-3 text-[13px]">
-          <span className="font-medium">{done}</span> is ready — check your downloads.
-        </div>
-      )}
+      <PageHeader title="Exports" sub={current ? `${current.status} · ${new Date(current.created_at).toLocaleString()}` : "No version yet."} />
       <div className="grid gap-3 lg:grid-cols-2">
         <section className="border border-line bg-paper p-4">
           <div className="mb-4 text-sm font-medium text-ink">New export</div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Version">
-              <select className={inputCls} defaultValue="v7">
-                <option>v8 (draft — watermarked)</option>
-                <option>v7 (published)</option>
-                <option>v6 (archived)</option>
-              </select>
-            </Field>
-            <Field label="Scope">
-              <select className={inputCls} defaultValue="all">
-                <option value="all">Whole institution</option>
-                <option value="cohort">One cohort…</option>
-                <option value="lecturer">One lecturer…</option>
-                <option value="room">One room…</option>
-              </select>
-            </Field>
-          </div>
-          <div className="mt-4 flex flex-wrap gap-2">
-            <button className={btnSecondaryCls} onClick={() => run("Master grid (PDF)")}>
-              <FileText size={15} /> Master grid (PDF)
-            </button>
-            <button className={btnSecondaryCls} onClick={() => run("Per-lecturer sheets (Excel)")}>
-              <FileSpreadsheet size={15} /> Per-lecturer (Excel)
-            </button>
-            <button className={btnSecondaryCls} onClick={() => run("Per-cohort sheets (Excel)")}>
-              <FileSpreadsheet size={15} /> Per-cohort (Excel)
-            </button>
-            <button className={btnSecondaryCls} onClick={() => run("Room utilisation (PDF)")}>
-              <FileText size={15} /> Room utilisation (PDF)
-            </button>
-          </div>
+          <ExportForm versions={versions} />
         </section>
         <section className="border border-line bg-paper p-4">
-          <div className="mb-3 text-sm font-medium text-ink">Recent exports</div>
-          {HISTORY.map((h) => (
-            <div key={h.id} className="flex items-center justify-between border-b border-line py-2.5 text-[13px] last:border-0">
-              <span>
-                <span className="font-medium text-ink">{h.what}</span>
-                <span className="mt-0.5 block text-muted">{h.by} · {h.when} · {h.size}</span>
-              </span>
-              <button className="flex items-center gap-1 text-indigo-deep hover:underline">
-                <Download size={14} /> Again
-              </button>
-            </div>
-          ))}
+          <div className="mb-3 text-sm font-medium text-ink">Version history</div>
+          {versions.length === 0 ? (
+            <p className="text-[13px] text-muted">No versions yet.</p>
+          ) : (
+            versions.map((v) => (
+              <div key={v.id} className="flex items-center justify-between border-b border-line py-2.5 text-[13px] last:border-0">
+                <span>
+                  <span className="font-medium text-ink">{new Date(v.created_at).toLocaleString()}</span>
+                  <span className="mt-0.5 block text-muted">{sem?.name}</span>
+                </span>
+                <StatusBadge tone={v.status === "published" ? "ok" : v.status === "draft" ? "warn" : "neutral"}>{v.status}</StatusBadge>
+              </div>
+            ))
+          )}
           <div className="mt-3">
             <StatusBadge tone="neutral">Exports never contain passwords or tokens</StatusBadge>
           </div>

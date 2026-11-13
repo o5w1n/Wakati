@@ -1,10 +1,7 @@
-import { Shell } from "@/components/shell";
-import { RoomViews } from "@/components/rooms";
+import { RoomViewsLive } from "@/components/roomviews";
 
-export default function LecturerRooms() {
-  return (
-    <Shell role="lecturer" active="/lecturer/rooms">
-      <RoomViews role="lecturer" heading="Room Views" sub="Published v7 · where every room is, and where it's free." />
-    </Shell>
-  );
+export const instant = false;
+
+export default async function LecturerRooms() {
+  return <RoomViewsLive role="lecturer" active="/lecturer/rooms" heading="Room Views" />;
 }
