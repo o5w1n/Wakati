@@ -104,6 +104,10 @@ def build_csvs(sb, job, tmp):
              [{"session_key": next((s["session_key"] for s in sessions if s["id"] == r["session_id"]), ""),
                "course_code": (courses.get(r["course_id"]) or {}).get("code", "")} for r in sc],
              ["session_key", "course_code"])
+    rows_csv(tmp / "courses.csv",
+             [{"code": c.get("code", ""), "is_elective": str(bool(c.get("is_elective", False))).lower()}
+              for c in courses.values()],
+             ["code", "is_elective"])
     # cohort rows (needs cohort -> programme + level)
     cohort_by_id = {c["id"]: c for c in cohorts}
     cc_rows = []
@@ -129,6 +133,10 @@ def build_csvs(sb, job, tmp):
                "room_code": (rooms_by_id.get(r.get("room_id") or "") or {}).get("code", "")} for r in blocked],
              ["day_of_week", "period_index", "room_code"])
     rows_csv(tmp / "periods.csv", periods, ["day_of_week", "period_index", "start_time", "end_time"])
+    # rule toggles + weights (semester_rules); solve.py honors H on/off and P1/P7 weights.
+    # P2-P9 are documented in solve.py's RULE_STATUS and applied as modeled.
+    rules = table(sb, "semester_rules", semester_id=sem_id)
+    rows_csv(tmp / "semester_rules.csv", rules, ["rule_id", "enabled", "weight", "params"])
     return {"sessions": sessions, "rooms_by_code": {r["code"]: r for r in rooms},
             "lect_by_email": {(l.get("email") or ""): l for l in lecturers.values()}}
 
