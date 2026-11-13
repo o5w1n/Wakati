@@ -42,9 +42,12 @@ select throws_ok(
      values ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa','11111111-1111-1111-1111-111111111111','published') $$,
   null, 'second published version rejected'
 );
--- registration path: function exists and is callable shape
-select has_function_privilege('authenticated', 'public.register_university(text,text,text,text)', 'execute',
-  'authenticated can execute register_university');
+-- registration path: authenticated role holds EXECUTE on the RPC (3-arg builtin + casts;
+-- there is no 4-arg pgTAP wrapper, so wrap it in ok() instead)
+select ok(
+  has_function_privilege('authenticated'::text, 'public.register_university(text,text,text,text)'::text, 'execute'::text),
+  'authenticated can execute register_university'
+);
 -- active universities visible as directory to other-tenant members
 select results_eq(
   $$ select count(*)::int from public.universities where status = 'active' $$,
