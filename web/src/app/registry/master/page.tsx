@@ -8,6 +8,7 @@ import { btnPrimaryCls, btnSecondaryCls } from "@/components/ui";
 import { DataTable } from "@/components/datatable";
 import { cn } from "@/lib/cn";
 import { supabaseBrowser } from "@/lib/supabase-client";
+import { ImportDialog } from "./import-dialog";
 
 const TABS = ["Lecturers", "Rooms", "Programmes", "Cohorts", "Courses", "Sessions", "Students"] as const;
 type Tab = (typeof TABS)[number];
@@ -55,6 +56,7 @@ export default function MasterData() {
   const [tab, setTab] = useState<Tab>("Lecturers");
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showImport, setShowImport] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -92,7 +94,7 @@ export default function MasterData() {
         sub="Set up once, reused every semester. Import or manage row by row."
         actions={
           <>
-            <button className={btnSecondaryCls}><Upload size={15} /> Import CSV</button>
+            <button className={btnSecondaryCls} onClick={() => setShowImport(true)}><Upload size={15} /> Import CSV</button>
             <button className={btnPrimaryCls}><Plus size={15} /> Add {tab.slice(0, -1).toLowerCase()}</button>
           </>
         }
@@ -119,6 +121,7 @@ export default function MasterData() {
       ) : (
         <DataTable columns={cols} rows={rows} searchPlaceholder={`Search ${tab.toLowerCase()}…`} />
       )}
+      {showImport && <ImportDialog onClose={() => setShowImport(false)} />}
     </Shell>
   );
 }

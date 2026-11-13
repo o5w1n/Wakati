@@ -1,31 +1,56 @@
+import { connection } from "next/server";
 import { Shell } from "@/components/shell";
-import { PageHeader, Field } from "@/components/ui";
+import { PageHeader, Field, StatusBadge } from "@/components/ui";
 import { inputCls, btnPrimaryCls } from "@/components/ui";
+import { supabaseServer } from "@/lib/supabase-server";
+import { createSemester, setSemesterStatus } from "@/app/actions/semesters";
 
-export default function RegistrySettings() {
+export const instant = false;
+
+export default async function RegistrySettings() {
+  await connection();
+  const sb = await supabaseServer();
+  const { data: semesters } = await sb.from("semesters").select("id,name,status,teaching_days").order("created_at", { ascending: false });
+  const sems = (semesters ?? []) as { id: string; name: string; status: string; teaching_days: number[] }[];
+  const active = sems[0];
+
   return (
     <Shell role="registry" active="/registry/settings">
-      <PageHeader title="Settings" sub="Academic City University · Semester 1 2026/27. The time grid is yours — not fixed Mon–Fri." />
+      <PageHeader title="Settings" sub="Semesters, time grids, solver rules. The grid is yours — not fixed Mon–Fri." />
       <div className="grid max-w-2xl gap-3">
         <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Time grid</div>
-          <div className="grid gap-3 sm:grid-cols-3">
-            <Field label="Teaching days">
-              <select className={inputCls} defaultValue="mon-fri">
-                <option value="mon-fri">Mon – Fri</option>
-                <option value="mon-sat">Mon – Sat</option>
-                <option value="mon-thu">Mon – Thu</option>
-              </select>
-            </Field>
-            <Field label="Periods per day">
-              <input type="number" defaultValue={9} min={1} max={24} className={inputCls} />
-            </Field>
-            <Field label="First period starts">
-              <input type="time" defaultValue="08:00" className={inputCls} />
-            </Field>
-          </div>
-          <p className="mt-2 text-xs text-muted">Changing the grid re-seeds periods for this semester only. Published versions keep their own grid.</p>
+          <div className="mb-4 text-sm font-medium text-ink">Semesters</div>
+          {sems.length === 0 ? (
+            <p className="text-[13px] text-muted">No semesters yet. Create the first one below — it gets the default Mon–Fri 9-period grid and starter rule weights.</p>
+          ) : (
+            <ul className="mb-4 space-y-2">
+              {sems.map((s) => (
+                <li key={s.id} className="flex items-center justify-between border-b border-line py-2 text-[13px] last:border-0">
+                  <span className="font-medium text-ink">{s.name}</span>
+                  <span className="flex items-center gap-2">
+                    <StatusBadge tone={s.status === "published" ? "ok" : s.status === "setup" ? "neutral" : "accent"}>{s.status}</StatusBadge>
+                    <form action={async () => { await setSemesterStatus(s.id, "availability"); }}>
+                      <button className="text-indigo-deep hover:underline">→ availability</button>
+                    </form>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+          <form action={async (f: FormData) => { await createSemester(f); }} className="flex gap-2">
+            <input name="name" required placeholder="2026/27 Semester 1" className={inputCls} />
+            <button className={btnPrimaryCls}>New semester</button>
+          </form>
         </section>
+        {active && (
+          <section className="border border-line bg-paper p-4">
+            <div className="mb-4 text-sm font-medium text-ink">Time grid — {active.name}</div>
+            <p className="text-[13px] text-muted">
+              Teaching days: {(active.teaching_days ?? []).join(", ")}. Edit the grid by importing periods.csv
+              from Master Data, or reseed below.
+            </p>
+          </section>
+        )}
         <section className="border border-line bg-paper p-4">
           <div className="mb-4 text-sm font-medium text-ink">Solver rules</div>
           <div className="space-y-2 text-[13px]">
@@ -41,26 +66,8 @@ export default function RegistrySettings() {
               </div>
             ))}
           </div>
+          <p className="mt-2 text-xs text-muted">Full per-semester weights live in semester_rules — tunable without code changes.</p>
         </section>
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Semester</div>
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="Status">
-              <select className={inputCls} defaultValue="review">
-                <option value="setup">Setup</option>
-                <option value="availability">Availability</option>
-                <option value="solving">Solving</option>
-                <option value="review">Review</option>
-                <option value="published">Published</option>
-                <option value="closed">Closed</option>
-              </select>
-            </Field>
-            <Field label="Blocked slots note">
-              <input defaultValue="Wed P5 — assembly (all rooms)" className={inputCls} />
-            </Field>
-          </div>
-        </section>
-        <div><button className={btnPrimaryCls}>Save settings</button></div>
       </div>
     </Shell>
   );

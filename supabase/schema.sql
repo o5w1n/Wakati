@@ -515,6 +515,7 @@ create policy "uni_update" on public.universities for update using (
 );
 alter table public.universities enable row level security;
 grant execute on function public.register_university(text, text, text, text) to authenticated;
+grant execute on function public.seed_periods(uuid, int[], time[], time[]) to authenticated;
 
 -- Generic select-own-university + admin-write policies for master/semester tables.
 -- Tables covered: lecturers, rooms, programmes, cohorts, courses, semesters, periods,

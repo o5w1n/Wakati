@@ -32,6 +32,8 @@ begin
   on conflict do nothing;
 end $$;
 
+grant execute on function public.seed_default_rules(uuid) to authenticated;
+
 -- Elective overlap map (H4): pairs of electives with shared-student counts.
 -- The solver reads this to allow zero-overlap pairs to share a slot.
 -- security_invoker: RLS on elective_choices applies as the querying user, not the view owner.
