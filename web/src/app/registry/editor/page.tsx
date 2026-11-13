@@ -1,114 +1,139 @@
-"use client";
-
-import { useState } from "react";
-import { Lock, Unlock, RotateCcw, RotateCw, Search, PanelRight } from "lucide-react";
+import { connection } from "next/server";
 import { Shell } from "@/components/shell";
 import { PageHeader, StatusBadge, EmptyState } from "@/components/ui";
-import { btnPrimaryCls, btnSecondaryCls } from "@/components/ui";
-import { TimetableGrid, SAMPLE_DAYS, SAMPLE_PERIODS, type SlotStatus } from "@/components/timetable";
-import { cn } from "@/lib/cn";
+import { supabaseServer } from "@/lib/supabase-server";
+import { EditorClient } from "./editor-client";
+import { createDraftVersion } from "@/app/actions/editor";
+import { btnPrimaryCls } from "@/components/ui";
 
-export default function EditorPage() {
-  const [selected, setSelected] = useState<string | null>("s2");
-  const [filter, setFilter] = useState("");
+export const instant = false;
 
-  // demo statuses: s2 amber (preference), s3 red (hard clash) with plain-language reasons
-  const statuses: Record<string, SlotStatus> = { s1: "ok", s2: "warn", s3: "bad", s4: "ok" };
-  const reasons: Record<string, string> = {
-    s2: "Last period of the day — outside Dr. Yamak's preferred window (P1, −15).",
-    s3: "Hard clash: Lab-B seats 45 but 78 students enrolled (H6). Needs override to save.",
-  };
+export interface EditorPlacement {
+  id: string;
+  sessionId: string;
+  sessionKey: string;
+  title: string;
+  component: string;
+  length: number;
+  lecturer: string;
+  expected: number;
+  courses: string[];
+  day: number;
+  startPeriod: number;
+  roomId: string;
+  roomCode: string;
+  roomCap: number;
+  locked: boolean;
+  overrideReason: string | null;
+}
+
+export default async function EditorPage() {
+  await connection();
+  const sb = await supabaseServer();
+  const { data: semesters } = await sb.from("semesters").select("id,name").order("created_at", { ascending: false });
+  const sems = (semesters ?? []) as { id: string; name: string }[];
+  const active = sems[0];
+  if (!active) {
+    return (
+      <Shell role="registry" active="/registry/editor">
+        <PageHeader title="Editor" sub="No semester yet." />
+        <EmptyState title="No semester" sub="Create a semester in Settings first." />
+      </Shell>
+    );
+  }
+
+  const [{ data: versions }, { data: periods }] = await Promise.all([
+    sb.from("timetable_versions").select("id,status,quality_score,created_at").eq("semester_id", active.id).order("created_at", { ascending: false }),
+    sb.from("periods").select("day_of_week,period_index,start_time,end_time").eq("semester_id", active.id).order("day_of_week").order("period_index"),
+  ]);
+  const vers = (versions ?? []) as { id: string; status: string; quality_score: number | null; created_at: string }[];
+  const draft = vers.find((v) => v.status === "draft") ?? vers[0];
+
+  let placements: EditorPlacement[] = [];
+  if (draft) {
+    const { data: pl } = await sb
+      .from("placements")
+      .select("id,session_id,day_of_week,start_period,room_id,locked,override_reason,sessions(id,session_key,component,length_periods,expected_students,lecturers(name)),rooms(id,code,capacity),session_courses:session_id(course_id)")
+      .eq("version_id", draft.id);
+    // courses per session
+    const sessIds = [...new Set(((pl ?? []) as { session_id: string }[]).map((p) => p.session_id))];
+    const courseMap = new Map<string, string[]>();
+    if (sessIds.length > 0) {
+      const { data: sc } = await sb.from("session_courses").select("session_id,courses(code,title)").in("session_id", sessIds);
+      for (const r of ((sc ?? []) as unknown as { session_id: string; courses: { code: string; title: string } | { code: string; title: string }[] | null }[])) {
+        const arr = courseMap.get(r.session_id) ?? [];
+        const c = Array.isArray(r.courses) ? r.courses[0] : r.courses;
+        if (c) arr.push(c.code);
+        courseMap.set(r.session_id, arr);
+      }
+    }
+    const first = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
+    placements = (((pl ?? []) as unknown) as {
+      id: string; session_id: string; day_of_week: number; start_period: number; room_id: string;
+      locked: boolean; override_reason: string | null;
+      sessions: { session_key: string; component: string; length_periods: number; expected_students: number; lecturers: { name: string } | { name: string }[] | null } | { session_key: string; component: string; length_periods: number; expected_students: number; lecturers: { name: string } | { name: string }[] | null }[] | null;
+      rooms: { id: string; code: string; capacity: number } | { id: string; code: string; capacity: number }[] | null;
+    }[]).map((p) => {
+      const sess = first(p.sessions);
+      const room = first(p.rooms);
+      const lec = sess ? first(sess.lecturers) : null;
+      return {
+        id: p.id,
+        sessionId: p.session_id,
+        sessionKey: sess?.session_key ?? "?",
+        title: (courseMap.get(p.session_id) ?? []).join(" / ") || sess?.session_key || "?",
+        component: sess?.component ?? "",
+        length: sess?.length_periods ?? 1,
+        lecturer: lec?.name ?? "TBA",
+        expected: sess?.expected_students ?? 0,
+        courses: courseMap.get(p.session_id) ?? [],
+        day: p.day_of_week,
+        startPeriod: p.start_period,
+        roomId: p.room_id,
+        roomCode: room?.code ?? "?",
+        roomCap: room?.capacity ?? 0,
+        locked: p.locked,
+        overrideReason: p.override_reason,
+      };
+    });
+  }
+
+  const grid = (periods ?? []) as { day_of_week: number; period_index: number; start_time: string; end_time: string }[];
+  const days = [...new Set(grid.map((p) => p.day_of_week))].sort();
+  const periodLabels = new Map<string, string>();
+  for (const p of grid) periodLabels.set(`${p.day_of_week}:${p.period_index}`, `${p.start_time.slice(0, 5)}–${p.end_time.slice(0, 5)}`);
 
   return (
     <Shell role="registry" active="/registry/editor">
       <PageHeader
         title="Editor"
-        sub="Draft v3 · score 94.2 · 2 unplaced — drag a session, slots colour live"
+        sub={`${active.name} · ${draft ? `${draft.status} · score ${draft.quality_score ?? "—"}` : "no version yet"}`}
         actions={
-          <>
-            <button className={btnSecondaryCls}><RotateCcw size={15} /> Undo</button>
-            <button className={btnSecondaryCls}><RotateCw size={15} /> Redo</button>
-            <button className={btnPrimaryCls}>Publish</button>
-          </>
+          !draft ? (
+            <form action={async () => { await createDraftVersion(active.id); }}>
+              <button className={btnPrimaryCls}>New draft</button>
+            </form>
+          ) : undefined
         }
       />
-
-      <div className="mb-3 flex flex-wrap items-center gap-2">
-        <div className="relative">
-          <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
-          <input
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-            placeholder="Filter programme, level, lecturer, room…"
-            className="h-9 w-72 border border-line bg-paper pl-8 pr-3 text-[13px] outline-none placeholder:text-muted focus:border-indigo-deep"
-          />
-        </div>
-        {["All levels", "100", "200", "300", "400"].map((l, i) => (
-          <button
-            key={l}
-            className={cn(
-              "h-9 border px-3 text-[13px]",
-              i === 0 ? "border-ink bg-ink text-white" : "border-line bg-paper text-muted hover:text-ink"
-            )}
-          >
-            {l}
-          </button>
-        ))}
-        <span className="ml-auto flex items-center gap-3 text-xs text-muted">
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 bg-ok-text" /> valid</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 bg-warn-text" /> preference</span>
-          <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 bg-bad-text" /> clash</span>
-        </span>
-      </div>
-
-      <div className="flex gap-3">
-        <div className="min-w-0 flex-1">
-          <TimetableGrid
-            days={SAMPLE_DAYS}
-            periods={SAMPLE_PERIODS}
-            statuses={statuses}
-            reasons={reasons}
-            selectedId={selected}
-            onSelect={setSelected}
-          />
-          <div className="mt-2 flex items-center justify-between text-xs text-muted">
-            <span>2 unplaced: <button className="text-indigo-deep hover:underline">PH301-P1 — no lab free when CS300 + Dr. Owusu are free</button></span>
-            <StatusBadge tone="warn">Unplaced sessions never publish silently</StatusBadge>
-          </div>
-        </div>
-
-        <aside className="hidden w-72 shrink-0 border border-line bg-paper lg:block">
-          {selected ? (
-            <div>
-              <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-                <span className="text-sm font-medium text-ink">Session</span>
-                <button className="flex items-center gap-1 text-xs text-muted hover:text-ink">
-                  <Lock size={13} /> Lock
-                </button>
-              </div>
-              <div className="space-y-3 px-4 py-3 text-[13px]">
-                <div>
-                  <div className="font-semibold text-ink">AI4136 / CS4135 — Computer Security</div>
-                  <div className="mt-0.5 text-muted">Theory · 2 periods · 1×/week · 80 students</div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge tone="warn">Amber — preference</StatusBadge>
-                </div>
-                <p className="text-muted">Last period of the day, outside the lecturer's preferred window (P1, −15). Valid — no override needed.</p>
-                <div className="flex gap-2 pt-1">
-                  <button className={btnPrimaryCls}>Find a slot</button>
-                  <button className={btnSecondaryCls}><Unlock size={14} /> Swap</button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            <div className="p-4">
-              <EmptyState title="No session selected" sub="Click a cell to inspect, lock, or reassign it." />
-            </div>
-          )}
-          <div className="hidden"><PanelRight size={0} /></div>
-        </aside>
-      </div>
+      {!draft ? (
+        <EmptyState title="No draft yet" sub="Generate a timetable first, or start an empty draft." />
+      ) : (
+        <EditorClient
+          versionId={draft.id}
+          versionStatus={draft.status}
+          placements={placements}
+          days={days}
+          periodLabels={Object.fromEntries(periodLabels)}
+        />
+      )}
+      {vers.length > 1 && (
+        <p className="mt-3 text-xs text-muted">
+          Other versions: {vers.slice(1).map((v) => `${v.status} (${new Date(v.created_at).toLocaleDateString()})`).join(" · ")}
+          {" — "}compare and restore from Review &amp; Publish.
+        </p>
+      )}
+      {draft && <StatusBadge tone="warn">Unplaced sessions never publish silently</StatusBadge>}
     </Shell>
   );
 }
