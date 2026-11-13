@@ -53,7 +53,8 @@ export function EditorClient({ versionId, placements: initial, days, periodLabel
     return per;
   }, [periodLabels]);
 
-  // live clash check
+  // live clash check — mirrors solver/checker.py hard rules H2/H1/H3/H6/H7/H9.
+  // Anything this flags red, the publish gate will also block. Overrides downgrade to warn.
   const { statuses, reasons } = useMemo(() => {
     const st: Record<string, SlotStatus> = {};
     const rs: Record<string, string> = {};
@@ -65,26 +66,47 @@ export function EditorClient({ versionId, placements: initial, days, periodLabel
         occ.get(key)!.push(p);
       }
     }
+    const dayPeriods = new Map<number, number[]>();
+    for (const key of Object.keys(periodLabels)) {
+      const [d, pi] = key.split(":").map(Number);
+      if (!dayPeriods.has(d)) dayPeriods.set(d, []);
+      dayPeriods.get(d)!.push(pi);
+    }
+    for (const v of dayPeriods.values()) v.sort((a, b) => a - b);
     for (const p of items) {
       let status: SlotStatus = "ok";
       let reason = "";
+      const fail = (r: string) => { status = "bad"; reason = r; };
+      // H6 capacity + H7 room type + H9 overrun: per-placement, checked first
       if (p.expected > p.roomCap) {
-        status = "bad";
-        reason = `${p.roomCode} is taken by ${p.sessionKey} at this time.`;
+        fail(`${p.expected} students do not fit in ${p.roomCode} (capacity ${p.roomCap}).`);
+      } else if (p.requiredRoomType !== "any" && p.roomType !== p.requiredRoomType) {
+        fail(`${p.sessionKey} needs a ${p.requiredRoomType.replace(/_/g, " ")}, but ${p.roomCode} is a ${p.roomType.replace(/_/g, " ")}.`);
       } else {
-        for (let j = 0; j < p.length; j++) {
-          const others = (occ.get(`${p.day}:${p.startPeriod + j}`) ?? []).filter((o) => o.id !== p.id);
-          const roomClash = others.find((o) => o.roomId === p.roomId);
-          if (roomClash) {
-            status = "bad";
-            reason = `${p.sessionKey} is already scheduled in this slot.`;
-            break;
-          }
-          const lecClash = p.lecturer !== "TBA" && others.find((o) => o.lecturer === p.lecturer);
-          if (lecClash) {
-            status = "bad";
-            reason = `${p.lecturer} teaches ${lecClash.sessionKey} at this time.`;
-            break;
+        const slots = dayPeriods.get(p.day) ?? [];
+        const idx = slots.indexOf(p.startPeriod);
+        if (idx === -1 || idx + p.length > slots.length) {
+          fail(`${p.sessionKey} needs ${p.length} consecutive periods but the day ends here.`);
+        } else {
+          for (let j = 0; j < p.length; j++) {
+            const others = (occ.get(`${p.day}:${p.startPeriod + j}`) ?? []).filter((o) => o.id !== p.id);
+            const roomClash = others.find((o) => o.roomId === p.roomId);
+            if (roomClash) {
+              fail(`${p.roomCode} is already booked by ${roomClash.sessionKey} at this time.`);
+              break;
+            }
+            const lecClash = p.lecturer !== "TBA" && others.find((o) => o.lecturer === p.lecturer);
+            if (lecClash) {
+              fail(`${p.lecturer} teaches ${lecClash.sessionKey} at this time.`);
+              break;
+            }
+            if (!p.isElective) {
+              const cohortClash = others.find((o) => !o.isElective && o.cohorts.some((c) => p.cohorts.includes(c)));
+              if (cohortClash) {
+                fail(`${p.sessionKey} and ${cohortClash.sessionKey} share students who cannot be in two places.`);
+                break;
+              }
+            }
           }
         }
       }
@@ -96,7 +118,7 @@ export function EditorClient({ versionId, placements: initial, days, periodLabel
       if (reason) rs[p.id] = reason;
     }
     return { statuses: st, reasons: rs };
-  }, [items]);
+  }, [items, periodLabels]);
 
   const gridPeriods = useMemo(() => {
     const first = days[0];
