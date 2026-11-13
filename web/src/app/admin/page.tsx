@@ -25,13 +25,6 @@ export default async function Institutions() {
   const { data: unis } = await sb.from("universities").select("id,name,short_code,status,created_at").order("created_at", { ascending: false });
   const list = (unis ?? []) as { id: string; name: string; short_code: string; status: string; created_at: string }[];
 
-  // usage: % of expected-student capacity placed — fall back to reference figures for the three named rows
-  const usageFallback: Record<string, string> = {
-    "Academic City University": "92%",
-    "Ghana Tech University": "–",
-    "West End University": "24%",
-  };
-
   const counts = new Map<string, number>();
   if (list.length > 0) {
     const { data: members } = await sb.from("profiles").select("university_id").in("university_id", list.map((u) => u.id));
@@ -76,7 +69,7 @@ export default async function Institutions() {
                 <tr key={u.id}>
                   <td className="px-4 py-3 font-medium text-heading">{u.name}</td>
                   <td className="px-4 py-3"><Pill tone={tone(u.status)}>{label(u.status)}</Pill></td>
-                  <td className="px-4 py-3 text-body">{usageFallback[u.name] ?? `${counts.get(u.id) ?? 0} members`}</td>
+                  <td className="px-4 py-3 text-body">{counts.get(u.id) ?? 0} members</td>
                   <td className="px-4 py-3">
                     <Link href={`/admin/${u.id}`} className={`${btnSecondaryCls} !h-8 !px-3 !text-xs !rounded-lg`}>
                       View
