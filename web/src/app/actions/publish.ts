@@ -64,6 +64,13 @@ export async function publishVersion(versionId: string, semesterId: string) {
     return { error: `Publish blocked: ${blockers.length} hard clash${blockers.length === 1 ? "" : "es"} without override. Fix in the editor or log an override.` };
   }
 
+  // one published version per semester (partial unique index): archive the old one first
+  const { error: archErr } = await sb
+    .from("timetable_versions")
+    .update({ status: "review", notes: "Archived: superseded by a newer publish." })
+    .eq("semester_id", semesterId)
+    .eq("status", "published");
+  if (archErr) return { error: archErr.message };
   const { error } = await sb.from("timetable_versions").update({ status: "published" }).eq("id", versionId);
   if (error) return { error: error.message };
   await sb.from("semesters").update({ status: "published" }).eq("id", semesterId);
