@@ -99,7 +99,7 @@ export default function MasterData() {
           </>
         }
       />
-      <div className="mb-3 flex flex-wrap gap-1 border-b border-line">
+      <div className="mb-3 flex flex-wrap gap-1 border-b border-cardline">
         {TABS.map((t) => (
           <button
             key={t}
@@ -107,8 +107,8 @@ export default function MasterData() {
             className={cn(
               "-mb-px border-b-2 px-3 py-2 text-[13px]",
               tab === t
-                ? "border-indigo-deep font-medium text-ink"
-                : "border-transparent text-muted hover:text-ink"
+                ? "border-primary font-medium text-heading"
+                : "border-transparent text-muted hover:text-heading"
             )}
           >
             {t}

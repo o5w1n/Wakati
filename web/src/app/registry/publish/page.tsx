@@ -59,10 +59,10 @@ export default async function Publish() {
           const done = i < idx, now = i === idx;
           return (
             <li key={s} className="flex items-center">
-              <span className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs font-medium ${done ? "border-indigo-deep bg-indigo-deep text-white" : now ? "border-indigo-deep text-indigo-deep" : "border-line text-muted"}`}>
+              <span className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs font-medium ${done ? "border-primary bg-primary text-white" : now ? "border-primary text-primary" : "border-cardline text-muted"}`}>
                 {done ? "✓" : i + 1}
               </span>
-              <span className={`mx-2 ${now ? "font-medium text-ink" : "text-muted"}`}>{s}</span>
+              <span className={`mx-2 ${now ? "font-medium text-heading" : "text-muted"}`}>{s}</span>
               {i < 2 && <span className="mx-2 h-px w-10 bg-line sm:w-20" />}
             </li>
           );
@@ -70,21 +70,21 @@ export default async function Publish() {
       </ol>
 
       {current?.status === "published" && (
-        <div className="mb-4 border border-line border-l-4 border-l-indigo-deep bg-paper p-4 text-[13px]">
+        <div className="mb-4 border border-cardline border-l-4 border-l-primary bg-card p-4 text-[13px]">
           <span className="font-medium">Published.</span> Lecturers and students can now see their
           personal timetables. Previous versions are archived and restorable.
         </div>
       )}
 
-      <section className="border border-line bg-paper p-4">
-        <div className="mb-3 text-sm font-medium text-ink">Version history</div>
+      <section className="rounded-xl border border-cardline bg-card p-4">
+        <div className="mb-3 text-sm font-medium text-heading">Version history</div>
         {vers.length === 0 ? (
           <p className="text-[13px] text-muted">No versions yet. Generate a draft from the Generate page.</p>
         ) : (
           vers.map((v) => (
-            <div key={v.id} className="border-b border-line py-2.5 text-[13px] last:border-0">
+            <div key={v.id} className="border-b border-cardline py-2.5 text-[13px] last:border-0">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-ink">{new Date(v.created_at).toLocaleString()}</span>
+                <span className="font-medium text-heading">{new Date(v.created_at).toLocaleString()}</span>
                 <StatusBadge tone={v.status === "published" ? "ok" : v.status === "draft" ? "warn" : "neutral"}>{v.status}</StatusBadge>
               </div>
               <div className="mt-0.5 text-muted">score {v.quality_score ?? "—"}{v.notes ? ` · ${v.notes}` : ""}</div>

@@ -18,19 +18,19 @@ export default async function RegistrySettings() {
     <Shell role="registry" active="/registry/settings">
       <PageHeader title="Settings" sub="Semesters, time grids, solver rules. The grid is yours — not fixed Mon–Fri." />
       <div className="grid max-w-2xl gap-3">
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Semesters</div>
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 text-sm font-medium text-heading">Semesters</div>
           {sems.length === 0 ? (
             <p className="text-[13px] text-muted">No semesters yet. Create the first one below — it gets the default Mon–Fri 9-period grid and starter rule weights.</p>
           ) : (
             <ul className="mb-4 space-y-2">
               {sems.map((s) => (
-                <li key={s.id} className="flex items-center justify-between border-b border-line py-2 text-[13px] last:border-0">
-                  <span className="font-medium text-ink">{s.name}</span>
+                <li key={s.id} className="flex items-center justify-between border-b border-cardline py-2 text-[13px] last:border-0">
+                  <span className="font-medium text-heading">{s.name}</span>
                   <span className="flex items-center gap-2">
                     <StatusBadge tone={s.status === "published" ? "ok" : s.status === "setup" ? "neutral" : "accent"}>{s.status}</StatusBadge>
                     <form action={async () => { await setSemesterStatus(s.id, "availability"); }}>
-                      <button className="text-indigo-deep hover:underline">→ availability</button>
+                      <button className="text-primary hover:underline">→ availability</button>
                     </form>
                   </span>
                 </li>
@@ -43,16 +43,16 @@ export default async function RegistrySettings() {
           </form>
         </section>
         {active && (
-          <section className="border border-line bg-paper p-4">
-            <div className="mb-4 text-sm font-medium text-ink">Time grid — {active.name}</div>
+          <section className="rounded-xl border border-cardline bg-card p-4">
+            <div className="mb-4 text-sm font-medium text-heading">Time grid — {active.name}</div>
             <p className="text-[13px] text-muted">
               Teaching days: {(active.teaching_days ?? []).join(", ")}. Edit the grid by importing periods.csv
               from Master Data, or reseed below.
             </p>
           </section>
         )}
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Solver rules</div>
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 text-sm font-medium text-heading">Solver rules</div>
           <div className="space-y-2 text-[13px]">
             {[
               ["H1–H12", "Hard constraints", "always on — violations block publish"],
@@ -60,8 +60,8 @@ export default async function RegistrySettings() {
               ["P5 ≤ 6", "Max periods per day", "per lecturer"],
               ["P6 ≤ 3", "Max consecutive", "before a forced break"],
             ].map(([code, name, note]) => (
-              <div key={code} className="flex items-center justify-between border-b border-line py-2 last:border-0">
-                <span><span className="font-mono text-xs text-muted">{code}</span> <span className="ml-1 font-medium text-ink">{name}</span></span>
+              <div key={code} className="flex items-center justify-between border-b border-cardline py-2 last:border-0">
+                <span><span className="font-mono text-xs text-muted">{code}</span> <span className="ml-1 font-medium text-heading">{name}</span></span>
                 <span className="text-muted">{note}</span>
               </div>
             ))}

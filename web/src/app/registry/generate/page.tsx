@@ -84,8 +84,8 @@ export default async function Generate() {
         <p className="text-[13px] text-muted">Create a semester in Settings, import your CSVs, then come back here.</p>
       ) : (
         <div className="grid gap-3 lg:grid-cols-2">
-          <section className="border border-line bg-paper">
-            <div className="border-b border-line px-4 py-2.5 text-sm font-medium text-ink">
+          <section className="rounded-xl border border-cardline bg-card">
+            <div className="border-b border-cardline px-4 py-2.5 text-sm font-medium text-heading">
               Pre-check — impossible inputs before generating
             </div>
             <ul className="px-4 py-2">
@@ -94,18 +94,18 @@ export default async function Generate() {
                   {c.ok
                     ? <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-ok-text" />
                     : <AlertTriangle size={15} className="mt-0.5 shrink-0 text-bad-text" />}
-                  <span className={c.ok ? "text-body" : "text-ink"}>{c.text}</span>
+                  <span className={c.ok ? "text-body" : "text-heading"}>{c.text}</span>
                 </li>
               ))}
             </ul>
             {fatal.length > 0 && (
-              <p className="border-t border-line px-4 py-2 text-[13px] text-muted">Fix the items above before running the solver.</p>
+              <p className="border-t border-cardline px-4 py-2 text-[13px] text-muted">Fix the items above before running the solver.</p>
             )}
           </section>
 
-          <section className="border border-line bg-paper">
-            <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-              <span className="text-sm font-medium text-ink">
+          <section className="rounded-xl border border-cardline bg-card">
+            <div className="flex items-center justify-between border-b border-cardline px-4 py-2.5">
+              <span className="text-sm font-medium text-heading">
                 {latest ? `Latest run — ${latest.status}` : "No runs yet"}
               </span>
               {latest?.quality_score != null && <StatusBadge tone="ok">score {latest.quality_score}</StatusBadge>}
@@ -113,8 +113,8 @@ export default async function Generate() {
             <div className="px-4 py-3">
               {latest ? (
                 <>
-                  <div className="h-1.5 w-full bg-canvas-2">
-                    <div className="h-1.5 bg-indigo-deep" style={{ width: `${latest.progress}%` }} />
+                  <div className="h-1.5 w-full bg-page">
+                    <div className="h-1.5 bg-primary" style={{ width: `${latest.progress}%` }} />
                   </div>
                   <div className="mt-2 text-xs text-muted">
                     {latest.status === "queued" && "Queued — the solver worker picks it up."}
@@ -123,8 +123,8 @@ export default async function Generate() {
                     {latest.status === "failed" && "Failed — check the worker logs."}
                   </div>
                   {latest.conflict_report && latest.conflict_report.length > 0 && (
-                    <div className="mt-3 border-t border-line pt-3">
-                      <div className="text-[13px] font-medium text-ink">Conflict report — {latest.conflict_report.length} unplaced</div>
+                    <div className="mt-3 border-t border-cardline pt-3">
+                      <div className="text-[13px] font-medium text-heading">Conflict report — {latest.conflict_report.length} unplaced</div>
                       <ul className="mt-1 space-y-1.5">
                         {latest.conflict_report.map((c) => (
                           <li key={c.session_key} className="bg-warn-bg px-2.5 py-2 text-[13px]">
@@ -133,7 +133,7 @@ export default async function Generate() {
                           </li>
                         ))}
                       </ul>
-                      <Link href="/registry/editor" className="mt-3 inline-block text-[13px] text-indigo-deep hover:underline">
+                      <Link href="/registry/editor" className="mt-3 inline-block text-[13px] text-primary hover:underline">
                         Open in editor to place by hand →
                       </Link>
                     </div>

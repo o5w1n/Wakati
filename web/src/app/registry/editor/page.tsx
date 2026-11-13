@@ -104,20 +104,20 @@ export default async function EditorPage() {
   for (const p of grid) periodLabels.set(`${p.day_of_week}:${p.period_index}`, `${p.start_time.slice(0, 5)}–${p.end_time.slice(0, 5)}`);
 
   return (
-    <Shell role="registry" active="/registry/editor">
-      <PageHeader
-        title="Editor"
-        sub={`${active.name} · ${draft ? `${draft.status} · score ${draft.quality_score ?? "—"}` : "no version yet"}`}
-        actions={
-          !draft ? (
-            <form action={async () => { await createDraftVersion(active.id); }}>
-              <button className={btnPrimaryCls}>New draft</button>
-            </form>
-          ) : undefined
-        }
-      />
+    <Shell role="registry" active="/registry/editor" title="Timetable Editor">
       {!draft ? (
-        <EmptyState title="No draft yet" sub="Generate a timetable first, or start an empty draft." />
+        <>
+          <PageHeader
+            title="Editor"
+            sub={`${active.name} · no version yet`}
+            actions={
+              <form action={async () => { await createDraftVersion(active.id); }}>
+                <button className={btnPrimaryCls}>New draft</button>
+              </form>
+            }
+          />
+          <EmptyState title="No draft yet" sub="Generate a timetable first, or start an empty draft." />
+        </>
       ) : (
         <EditorClient
           versionId={draft.id}

@@ -1,39 +1,50 @@
 @import "tailwindcss";
 
 @theme {
-  /* Wakati tokens — monochrome first, indigo accent */
-  --color-ink: #111111;
-  --color-paper: #ffffff;
-  --color-canvas: #f7f7f5;
-  --color-canvas-2: #f1f1ef;
-  --color-line: #e5e5e3;
-  --color-muted: #777777;
-  --color-body: #171717;
-  --color-indigo-deep: #4338ca;
-  --color-indigo-hover: #3730a3;
-  --color-ok-bg: #dcfce7;
+  --color-primary: #3a2fc8;
+  --color-primary-hover: #2f27a8;
+  --color-sidebar: #141b34;
+  --color-sidebar-active: #3a2fc8;
+  --color-page: #f6f7fd;
+  --color-card: #ffffff;
+  --color-cardline: #e6e8f2;
+  --color-lavender: #dad7fb;
+  --color-ok-bg: #d6f3e0;
   --color-ok-text: #166534;
-  --color-warn-bg: #fef3c7;
+  --color-warn-bg: #fce9c5;
   --color-warn-text: #92400e;
-  --color-bad-bg: #fee2e2;
-  --color-bad-text: #991b1b;
+  --color-bad-bg: #f9d2d2;
+  --color-bad-text: #b91c1c;
+  --color-heading: #111827;
+  --color-body: #4b5563;
+  --color-muted: #9ca3af;
 
-  --font-sans: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+  /* legacy aliases so existing code keeps compiling */
+  --color-ink: #111827;
+  --color-paper: #ffffff;
+  --color-canvas: #f6f7fd;
+  --color-canvas-2: #eef0f9;
+  --color-line: #e6e8f2;
+  --color-indigo-deep: #3a2fc8;
+  --color-indigo-hover: #2f27a8;
+
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --radius-card: 12px;
+  --radius-input: 8px;
 }
 
 body {
-  background: var(--color-canvas);
+  background: var(--color-page);
   color: var(--color-body);
+  font-family: var(--font-sans);
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
 }
 
-/* timetable grid scrollbars */
-.tt-scroll::-webkit-scrollbar {
-  height: 8px;
-  width: 8px;
+:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
-.tt-scroll::-webkit-scrollbar-thumb {
-  background: var(--color-line);
-  border-radius: 4px;
-}
+
+.tt-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+.tt-scroll::-webkit-scrollbar-thumb { background: var(--color-cardline); border-radius: 4px; }

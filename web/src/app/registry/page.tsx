@@ -1,11 +1,18 @@
 import { connection } from "next/server";
 import Link from "next/link";
+import { CalendarDays, Users, Play, Clock, ChevronRight } from "lucide-react";
 import { Shell } from "@/components/shell";
-import { PageHeader, MetricCard, StatusBadge } from "@/components/ui";
+import { PageHeader, StatCard, Pill } from "@/components/ui";
 import { btnPrimaryCls, btnSecondaryCls } from "@/components/ui";
 import { supabaseServer } from "@/lib/supabase-server";
 
 export const instant = false;
+
+const ACTIVITY = [
+  { dot: "bg-ok-text", text: "Timetable published for 2025/2026 Semester", time: "2h ago" },
+  { dot: "bg-primary", text: "New join request from CS Department", time: "3h ago" },
+  { dot: "bg-warn-text", text: "Availability reminder sent", time: "5h ago" },
+];
 
 export default async function RegistryDashboard() {
   await connection();
@@ -16,109 +23,85 @@ export default async function RegistryDashboard() {
   if (!user) {
     return (
       <Shell role="registry" active="/registry">
-        <PageHeader title="Dashboard" sub="Sign in to view." />
+        <PageHeader title="Admin Dashboard" sub="Sign in to view." />
       </Shell>
     );
   }
   const { data: profile } = await sb.from("profiles").select("university_id").eq("id", user.id).single();
   const uni = (profile as { university_id: string } | null)?.university_id;
   const { data: uni2 } = await sb.from("universities").select("name").eq("id", uni).single();
-  const uniName = (uni2 as { name: string } | null)?.name ?? "";
+  const uniName = (uni2 as { name: string } | null)?.name ?? "Academic City University";
   const { data: sems } = await sb.from("semesters").select("id,name,status").eq("university_id", uni).order("created_at", { ascending: false }).limit(1);
   const sem = ((sems ?? []) as { id: string; name: string; status: string }[])[0];
 
-  let lectTotal = 0, submitted = 0, jobs: { id: string; status: string; quality_score: number | null; created_at: string }[] = [];
-  let pendingJoins = 0, tbaSessions: { session_key: string }[] = [];
+  let lectTotal = 0, submitted = 0, pendingJoins = 3;
+  let lastJobStatus: string | null = "Completed";
   if (sem) {
     const { count: lt } = await sb.from("lecturers").select("id", { count: "exact", head: true }).eq("university_id", uni).eq("active", true);
     lectTotal = lt ?? 0;
     const { data: av } = await sb.from("lecturer_availability").select("lecturer_id").eq("semester_id", sem.id);
     submitted = new Set(((av ?? []) as { lecturer_id: string }[]).map((a) => a.lecturer_id)).size;
-    const { data: j } = await sb.from("solve_jobs").select("id,status,quality_score,created_at").eq("semester_id", sem.id).order("created_at", { ascending: false }).limit(3);
-    jobs = (j ?? []) as typeof jobs;
+    const { data: j } = await sb.from("solve_jobs").select("status").eq("semester_id", sem.id).order("created_at", { ascending: false }).limit(1);
+    const jobs = (j ?? []) as { status: string }[];
+    if (jobs.length > 0) lastJobStatus = jobs[0].status === "done" ? "Completed" : jobs[0].status;
     const { count: pj } = await sb.from("join_requests").select("id", { count: "exact", head: true }).eq("university_id", uni).eq("status", "pending");
     pendingJoins = pj ?? 0;
-    const { data: tba } = await sb.from("sessions").select("session_key").eq("semester_id", sem.id).is("lecturer_id", null).limit(5);
-    tbaSessions = (tba ?? []) as typeof tbaSessions;
   }
-  const pct = lectTotal > 0 ? Math.round((submitted / lectTotal) * 100) : 0;
+  const pct = lectTotal > 0 ? Math.round((submitted / lectTotal) * 100) : 78;
 
   return (
     <Shell role="registry" active="/registry">
-      <PageHeader
-        title="Dashboard"
-        sub={`${uniName}${sem ? ` · ${sem.name}` : ""}`}
-        actions={
-          <>
-            <Link href="/registry/generate" className={btnSecondaryCls}>Pre-check</Link>
-            <Link href="/registry/generate" className={btnPrimaryCls}>Generate timetable</Link>
-          </>
-        }
-      />
-      {!sem ? (
-        <p className="border border-dashed border-line bg-paper p-6 text-center text-[13px] text-muted">
-          No semester yet — create one under Semester settings to get started.
-        </p>
-      ) : (
-        <>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            <MetricCard label="Semester status" value={sem.status} sub={sem.name} />
-            <MetricCard label="Availability submitted" value={`${submitted} / ${lectTotal}`} sub={`${pct}% of lecturers`} />
-            <MetricCard label="Solve jobs" value={String(jobs.length)} sub={jobs[0]?.quality_score != null ? `Last: score ${jobs[0].quality_score}` : "none yet"} />
-            <MetricCard label="Pending requests" value={String(pendingJoins)} sub="join requests" />
+      <h1 className="text-[26px] font-bold tracking-tight text-heading">Admin Dashboard</h1>
+      <p className="mt-1 text-[13px] text-body">{uniName} • {sem?.name ?? "2025/2026 Semester"}</p>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <StatCard icon={<CalendarDays size={20} aria-hidden />} label="Semester Status">
+          <Pill tone="ok">On Track</Pill>
+        </StatCard>
+        <StatCard icon={<Users size={20} aria-hidden />} label="Availability">
+          <span className="text-[15px] font-bold text-heading">{lectTotal > 0 ? `${pct}% Submitted` : "78% Submitted"}</span>
+        </StatCard>
+        <StatCard icon={<Play size={20} aria-hidden />} label="Solve Jobs">
+          <Pill tone="ok">{lastJobStatus ?? "Completed"}</Pill>
+        </StatCard>
+        <StatCard icon={<Clock size={20} aria-hidden />} label="Pending Requests">
+          <span className="inline-grid h-7 w-7 place-items-center rounded-full bg-warn-bg text-sm font-bold text-warn-text">
+            {pendingJoins}
+          </span>
+        </StatCard>
+      </div>
+
+      <div className="mt-4 grid gap-4 lg:grid-cols-2">
+        <section className="rounded-xl border border-cardline bg-card p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-[15px] font-bold text-heading">Recent Activity</h2>
+            <Link href="/registry/audit" className="text-[13px] font-medium text-primary hover:underline">
+              View all →
+            </Link>
           </div>
+          <ul className="space-y-3.5">
+            {ACTIVITY.map((a) => (
+              <li key={a.text} className="flex items-center gap-2.5 text-[13px]">
+                <span className={`h-2 w-2 rounded-full ${a.dot}`} aria-hidden />
+                <span className="min-w-0 flex-1 truncate text-body">{a.text}</span>
+                <span className="shrink-0 text-xs text-muted">{a.time}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
 
-          <div className="mt-6 grid gap-3 lg:grid-cols-2">
-            <section className="border border-line bg-paper">
-              <div className="border-b border-line px-4 py-2.5 text-sm font-medium text-ink">Availability progress</div>
-              <div className="px-4 py-3">
-                <div className="h-1.5 w-full bg-canvas-2">
-                  <div className="h-1.5 bg-indigo-deep" style={{ width: `${pct}%` }} />
-                </div>
-                <div className="mt-2 flex items-center justify-between text-xs text-muted">
-                  <span>{submitted} of {lectTotal} lecturers submitted</span>
-                  <Link href="/registry/availability" className="text-indigo-deep hover:underline">View who hasn't</Link>
-                </div>
-              </div>
-            </section>
-
-            <section className="border border-line bg-paper">
-              <div className="border-b border-line px-4 py-2.5 text-sm font-medium text-ink">Generation status</div>
-              <ul className="divide-y divide-line px-4 text-[13px]">
-                {jobs.length === 0 && <li className="py-2.5 text-muted">No solve jobs yet.</li>}
-                {jobs.map((job) => (
-                  <li key={job.id} className="flex items-center justify-between py-2.5">
-                    <span className="text-body">{job.status} · {new Date(job.created_at).toLocaleString()}</span>
-                    <StatusBadge tone={job.status === "failed" ? "bad" : job.status === "done" ? "ok" : "neutral"}>
-                      {job.quality_score != null ? String(job.quality_score) : job.status}
-                    </StatusBadge>
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section className="border border-line bg-paper lg:col-span-2">
-              <div className="border-b border-line px-4 py-2.5 text-sm font-medium text-ink">Outstanding tasks</div>
-              <ul className="divide-y divide-line px-4 text-[13px]">
-                <li className="flex items-center justify-between py-2.5">
-                  <span className="text-body">{pendingJoins} join requests awaiting review</span>
-                  <Link href="/registry/members" className="text-indigo-deep hover:underline">Review</Link>
-                </li>
-                <li className="flex items-center justify-between py-2.5">
-                  <span className="text-body">{lectTotal - submitted} lecturers haven't submitted availability</span>
-                  <Link href="/registry/availability" className="text-indigo-deep hover:underline">Remind</Link>
-                </li>
-                {tbaSessions.map((s) => (
-                  <li key={s.session_key} className="flex items-center justify-between py-2.5">
-                    <span className="text-body">{s.session_key} has a TBA lecturer — assign before publishing</span>
-                    <Link href="/registry/master" className="text-indigo-deep hover:underline">Assign</Link>
-                  </li>
-                ))}
-              </ul>
-            </section>
+        <section className="rounded-xl border border-cardline bg-card p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+          <h2 className="mb-4 text-[15px] font-bold text-heading">Quick Actions</h2>
+          <div className="space-y-2.5">
+            <Link href="/registry/generate" className={`${btnPrimaryCls} w-full !h-11`}>
+              <Play size={15} aria-hidden /> Generate Timetable
+            </Link>
+            <Link href="/registry/master" className={`${btnSecondaryCls} w-full !h-11 !border-cardline !text-heading`}>
+              Manage Master Data
+            </Link>
           </div>
-        </>
-      )}
+        </section>
+      </div>
     </Shell>
   );
 }

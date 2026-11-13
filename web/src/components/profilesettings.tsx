@@ -27,8 +27,8 @@ export async function ProfileSettingsLive({ role, active, path }: {
     <Shell role={role} active={active}>
       <PageHeader title="Settings" sub={p.email} />
       <div className="grid max-w-2xl gap-3">
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Profile</div>
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 text-sm font-medium text-heading">Profile</div>
           <form action={async (f: FormData) => { await updateProfileName(String(f.get("name") ?? ""), path); }} className="space-y-3">
             <Field label="Full name"><input name="name" defaultValue={p.full_name ?? ""} className={inputCls} /></Field>
             <Field label="Email" hint="Managed by your institution — contact Registry to change it.">
@@ -37,8 +37,8 @@ export async function ProfileSettingsLive({ role, active, path }: {
             <button className={btnPrimaryCls}>Save profile</button>
           </form>
         </section>
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Change password</div>
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 text-sm font-medium text-heading">Change password</div>
           <p className="text-[13px] text-muted">
             Password changes go through the sign-in page reset flow — we never handle raw passwords here.
           </p>

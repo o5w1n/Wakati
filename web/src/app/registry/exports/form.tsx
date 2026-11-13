@@ -30,8 +30,8 @@ export function ExportForm({ versions }: { versions: { id: string; status: strin
 
   return (
     <form action={action} className="grid gap-3">
-      {result.error && <div className="border border-line bg-paper p-3 text-[13px] text-red-800">{result.error}</div>}
-      {result.ok && <div className="border border-line border-l-4 border-l-indigo-deep bg-paper p-3 text-[13px]"><span className="font-medium">{result.filename}</span> is ready — check your downloads.</div>}
+      {result.error && <div className="border border-cardline bg-card p-3 text-[13px] text-bad-text">{result.error}</div>}
+      {result.ok && <div className="border border-cardline border-l-4 border-l-primary bg-card p-3 text-[13px]"><span className="font-medium">{result.filename}</span> is ready — check your downloads.</div>}
       <Field label="Version">
         <select name="version_id" className={inputCls} defaultValue={versions[0]?.id ?? ""}>
           {versions.map((v) => (

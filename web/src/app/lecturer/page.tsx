@@ -1,7 +1,8 @@
 import { connection } from "next/server";
 import Link from "next/link";
+import { CalendarDays, ChevronRight } from "lucide-react";
 import { Shell } from "@/components/shell";
-import { PageHeader, StatusBadge, EmptyState } from "@/components/ui";
+import { EmptyState, btnSecondaryCls } from "@/components/ui";
 import { supabaseServer } from "@/lib/supabase-server";
 
 export const instant = false;
@@ -15,7 +16,8 @@ export default async function LecturerHome() {
   if (!user) {
     return (
       <Shell role="lecturer" active="/lecturer">
-        <PageHeader title="Home" sub="Sign in to see your day." />
+        <h1 className="text-2xl font-bold text-heading">Hello!</h1>
+        <p className="mt-1 text-[13px] text-body">Sign in to see your day.</p>
       </Shell>
     );
   }
@@ -26,45 +28,94 @@ export default async function LecturerHome() {
   if (!prof?.lecturer_id) {
     return (
       <Shell role="lecturer" active="/lecturer">
-        <PageHeader title={`Good morning, ${firstName}`} sub="No lecturer record linked yet." />
-        <EmptyState title="Not linked" sub="Ask the Registry to link your account to your lecturer record." />
+        <h1 className="text-2xl font-bold text-heading">Hello, {firstName}!</h1>
+        <p className="mt-1 text-[13px] text-body">No lecturer record linked yet.</p>
+        <div className="mt-4"><EmptyState title="Not linked" sub="Ask the Registry to link your account to your lecturer record." /></div>
       </Shell>
     );
   }
-  const { data: sems } = await sb.from("semesters").select("id,name,status").eq("university_id", prof.university_id).order("created_at", { ascending: false }).limit(1);
-  const sem = ((sems ?? []) as { id: string; name: string; status: string }[])[0];
 
-  let availStatus: "submitted" | "missing" = "missing";
-  let sessionCount = 0;
+  // next class from the latest published (or draft) version
+  const { data: sems } = await sb.from("semesters").select("id,name").eq("university_id", prof.university_id).order("created_at", { ascending: false }).limit(1);
+  const sem = ((sems ?? []) as { id: string; name: string }[])[0];
+  let nextClass: { code: string; title: string; day: string; start: string; room: string } | null = null;
+  let myCount = 0;
   if (sem) {
-    const { count } = await sb.from("lecturer_availability").select("id", { count: "exact", head: true }).eq("semester_id", sem.id).eq("lecturer_id", prof.lecturer_id);
-    availStatus = (count ?? 0) > 0 ? "submitted" : "missing";
-    const { count: sc } = await sb.from("sessions").select("id", { count: "exact", head: true }).eq("semester_id", sem.id).eq("lecturer_id", prof.lecturer_id);
-    sessionCount = sc ?? 0;
+    const { data: vers } = await sb.from("timetable_versions").select("id").eq("semester_id", sem.id).order("created_at", { ascending: false }).limit(1);
+    const ver = ((vers ?? []) as { id: string }[])[0];
+    if (ver) {
+      const { data: sess } = await sb.from("sessions").select("id,session_key").eq("semester_id", sem.id).eq("lecturer_id", prof.lecturer_id);
+      const mySess = (sess ?? []) as { id: string; session_key: string }[];
+      myCount = mySess.length;
+      if (mySess.length > 0) {
+        const ids = mySess.map((s) => s.id);
+        const { data: pl } = await sb
+          .from("placements")
+          .select("day_of_week,start_period,session_id,rooms(code),periods:periods!inner(start_time)")
+          .eq("version_id", ver.id)
+          .in("session_id", ids)
+          .order("day_of_week")
+          .order("start_period")
+          .limit(1);
+        const first = <T,>(v: T | T[] | null): T | null => (Array.isArray(v) ? v[0] ?? null : v);
+        const row = ((pl ?? []) as unknown as {
+          day_of_week: number; start_period: number; session_id: string;
+          rooms: { code: string } | { code: string }[] | null;
+          periods: { start_time: string } | { start_time: string }[] | null;
+        }[])[0];
+        if (row) {
+          const key = mySess.find((s) => s.id === row.session_id)?.session_key ?? "";
+          const room = first(row.rooms);
+          const per = first(row.periods);
+          const days = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+          nextClass = {
+            code: key, title: "", day: days[row.day_of_week] ?? "",
+            start: (per?.start_time ?? "").slice(0, 5), room: room?.code ?? "?",
+          };
+        }
+      }
+    }
   }
 
   return (
     <Shell role="lecturer" active="/lecturer">
-      <PageHeader title={`Good morning, ${firstName}`} sub={sem ? `${sem.name} · ${sessionCount} sessions` : "No semester yet."} />
-      <div className="grid gap-3 lg:grid-cols-2">
-        <section className="border border-line bg-paper">
-          <div className="border-b border-line px-4 py-2.5 text-sm font-medium text-ink">Timetable</div>
-          <div className="px-4 py-3 text-[13px]">
-            {sessionCount === 0 ? "No sessions assigned to you yet." : `${sessionCount} sessions assigned — see your full grid.`}
-            <Link href="/lecturer/timetable" className="mt-2 block text-indigo-deep hover:underline">Full timetable →</Link>
+      <h1 className="text-[26px] font-bold tracking-tight text-heading">Hello, {firstName}!</h1>
+      <p className="mt-1 text-[13px] text-body">Here&apos;s your next class.</p>
+
+      <section className="mt-5 rounded-xl border border-cardline bg-card p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-4">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-lavender/60 text-primary" aria-hidden>
+              <CalendarDays size={22} />
+            </span>
+            <div className="min-w-0">
+              <p className="text-[13px] text-body">Next Class</p>
+              {nextClass ? (
+                <>
+                  <p className="truncate text-[17px] font-bold text-heading">{nextClass.code}</p>
+                  <p className="mt-0.5 text-[13px] text-body">{nextClass.day}, {nextClass.start} • {nextClass.room}</p>
+                </>
+              ) : (
+                <p className="text-[15px] font-bold text-heading">
+                  {myCount === 0 ? "No sessions assigned yet" : "Nothing scheduled"}
+                </p>
+              )}
+            </div>
           </div>
-        </section>
-        <section className="border border-line bg-paper">
-          <div className="border-b border-line px-4 py-2.5 text-sm font-medium text-ink">Availability</div>
-          <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-[13px] text-body">{sem?.name ?? "No semester"}</span>
-            {availStatus === "submitted" ? <StatusBadge tone="ok">Submitted</StatusBadge> : <StatusBadge tone="warn">Not submitted</StatusBadge>}
-          </div>
-          <div className="px-4 pb-3">
-            <Link href="/lecturer/availability" className="text-[13px] text-indigo-deep hover:underline">Fill in your grid →</Link>
-          </div>
-        </section>
-      </div>
+          <Link href="/lecturer/timetable" aria-label="Open my timetable" className="shrink-0 text-body transition-colors hover:text-heading">
+            <ChevronRight size={20} />
+          </Link>
+        </div>
+      </section>
+
+      <section className="mt-6 flex flex-wrap gap-2">
+        <Link href="/lecturer/availability" className={`${btnSecondaryCls} !border-cardline !text-heading`}>
+          Set availability
+        </Link>
+        <Link href="/lecturer/timetable" className={`${btnSecondaryCls} !border-cardline !text-heading`}>
+          My timetable
+        </Link>
+      </section>
     </Shell>
   );
 }

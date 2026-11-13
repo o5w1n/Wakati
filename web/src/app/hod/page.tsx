@@ -52,30 +52,30 @@ export default async function HodHome() {
         <MetricCard label="Version" value={ver ? ver.status : "none"} sub={ver?.quality_score != null ? `score ${ver.quality_score}` : ""} />
       </div>
       <div className="grid gap-3 lg:grid-cols-2">
-        <section className="border border-line bg-paper">
-          <div className="border-b border-line px-4 py-2.5 text-sm font-medium text-ink">Needs your attention</div>
+        <section className="rounded-xl border border-cardline bg-card">
+          <div className="border-b border-cardline px-4 py-2.5 text-sm font-medium text-heading">Needs your attention</div>
           <div className="divide-y divide-line">
             <div className="flex items-center justify-between px-4 py-3 text-[13px]">
               <span>{missing} lecturers haven't submitted availability</span>
-              <Link href="/hod/availability" className="shrink-0 text-indigo-deep hover:underline">Remind →</Link>
+              <Link href="/hod/availability" className="shrink-0 text-primary hover:underline">Remind →</Link>
             </div>
             {(tba ?? 0) > 0 && (
               <div className="flex items-center justify-between px-4 py-3 text-[13px]">
                 <span>{tba} sessions have TBA lecturers <StatusBadge tone="warn">assign</StatusBadge></span>
-                <Link href="/registry/master" className="shrink-0 text-indigo-deep hover:underline">Review →</Link>
+                <Link href="/registry/master" className="shrink-0 text-primary hover:underline">Review →</Link>
               </div>
             )}
           </div>
         </section>
-        <section className="border border-line bg-paper">
-          <div className="border-b border-line px-4 py-2.5 text-sm font-medium text-ink">Timetable status</div>
+        <section className="rounded-xl border border-cardline bg-card">
+          <div className="border-b border-cardline px-4 py-2.5 text-sm font-medium text-heading">Timetable status</div>
           <div className="px-4 py-3 text-[13px]">
             <div className="flex items-center justify-between">
               <span className="text-body">{ver ? `${ver.status} version under Registry review` : "No version yet"}</span>
               {ver && <StatusBadge tone={ver.status === "published" ? "ok" : "warn"}>{ver.status}</StatusBadge>}
             </div>
             <p className="mt-2 text-muted">Edits go through the Registry — flag issues rather than fixing them here.</p>
-            <Link href="/hod/timetable" className="mt-2 inline-block text-indigo-deep hover:underline">View department timetable →</Link>
+            <Link href="/hod/timetable" className="mt-2 inline-block text-primary hover:underline">View department timetable →</Link>
           </div>
         </section>
       </div>

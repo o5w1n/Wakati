@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import Link from "next/link";
+import { Logo } from "@/components/brand";
 import { Field, inputCls, btnPrimaryCls } from "@/components/ui";
 import { requestJoin } from "@/app/actions/auth";
 import { supabaseBrowser } from "@/lib/supabase-client";
@@ -29,12 +30,14 @@ export default function RequestJoin() {
       .then(({ data }) => setUnis((data as Uni[]) ?? []));
   }, []);
   return (
-    <div className="flex min-h-screen items-center justify-center bg-canvas px-4 py-10">
-      <div className="w-full max-w-md border border-line bg-paper p-8">
-        <Link href="/signup" className="text-[13px] text-muted hover:text-ink">← Back</Link>
-        <h1 className="mt-2 text-xl font-semibold text-ink">Request to join</h1>
-        <p className="mt-1 text-[13px] text-muted">Your admin approves requests. No open self-join.</p>
-        <form action={action} className="mt-6 space-y-4">
+    <div className="min-h-screen bg-page">
+      <header className="mx-auto flex h-16 max-w-3xl items-center px-6">
+        <Logo />
+      </header>
+      <main className="mx-auto max-w-md px-6 pb-16">
+        <h1 className="text-center text-[28px] font-bold tracking-tight text-heading">Find / Join Institution</h1>
+        <p className="mt-1.5 text-center text-sm text-body">Request to join an existing institution. Your admin approves requests — no open self-join.</p>
+        <form action={action} className="mt-6 space-y-4 rounded-xl border border-cardline bg-card p-6">
           <Field label="Institution">
             <select name="university_id" className={inputCls} required defaultValue="">
               <option value="" disabled>Choose your institution…</option>
@@ -59,8 +62,11 @@ export default function RequestJoin() {
           <button type="submit" disabled={pending} className={`${btnPrimaryCls} w-full`}>
             {pending ? "Sending…" : "Send request"}
           </button>
+          <p className="text-center">
+            <Link href="/get-started" className="text-[13px] text-body hover:text-heading">← Back</Link>
+          </p>
         </form>
-      </div>
+      </main>
     </div>
   );
 }

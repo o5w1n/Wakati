@@ -49,15 +49,15 @@ export default async function AvailabilityTracking() {
         title="Availability"
         sub={`${sem.name} · ${submitted} of ${list.length} submitted`}
       />
-      <div className="mb-3 h-1.5 w-full bg-canvas-2">
-        <div className="h-1.5 bg-indigo-deep" style={{ width: `${pct}%` }} />
+      <div className="mb-3 h-1.5 w-full bg-page">
+        <div className="h-1.5 bg-primary" style={{ width: `${pct}%` }} />
       </div>
       {list.length === 0 ? (
         <EmptyState title="No lecturers" sub="Import lecturers under Master Data first." />
       ) : (
-        <table className="w-full border border-line bg-paper text-[13px]">
+        <table className="w-full border border-cardline bg-card text-[13px]">
           <thead>
-            <tr className="border-b border-line bg-canvas-2 text-left text-muted">
+            <tr className="border-b border-cardline bg-page text-left text-muted">
               <th className="px-3 py-2 font-medium">Lecturer</th>
               <th className="px-3 py-2 font-medium">Department</th>
               <th className="px-3 py-2 font-medium">Status</th>
@@ -69,8 +69,8 @@ export default async function AvailabilityTracking() {
             {list.map((l) => {
               const e = byLect.get(l.id);
               return (
-                <tr key={l.id} className="border-b border-line last:border-0">
-                  <td className="px-3 py-2 font-medium text-ink">{l.name}</td>
+                <tr key={l.id} className="border-b border-cardline last:border-0">
+                  <td className="px-3 py-2 font-medium text-heading">{l.name}</td>
                   <td className="px-3 py-2 text-muted">{l.department}</td>
                   <td className="px-3 py-2">{e ? <StatusBadge tone="ok">Submitted</StatusBadge> : <StatusBadge tone="bad">Not submitted</StatusBadge>}</td>
                   <td className="px-3 py-2">{e?.unavailable ?? "—"}</td>

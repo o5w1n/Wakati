@@ -68,8 +68,8 @@ export default async function InstitutionDetail({ params }: { params: Promise<{ 
       </div>
 
       <div className="grid gap-3 lg:grid-cols-2">
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Institution settings</div>
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 text-sm font-medium text-heading">Institution settings</div>
           <form action={async (f: FormData) => { await updateInstitution(f); }} className="space-y-3">
             <input type="hidden" name="id" value={u.id} />
             <Field label="Name">
@@ -82,20 +82,20 @@ export default async function InstitutionDetail({ params }: { params: Promise<{ 
           </form>
         </section>
 
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Admins</div>
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 text-sm font-medium text-heading">Admins</div>
           {adminList.length === 0 ? (
             <p className="text-[13px] text-muted">No timetable_admin on record — the registering user may not have completed signup.</p>
           ) : (
             adminList.map((a) => (
-              <div key={a.email} className="border-b border-line py-2 text-[13px] last:border-0">
-                <span className="font-medium text-ink">{a.full_name ?? a.email}</span>
+              <div key={a.email} className="border-b border-cardline py-2 text-[13px] last:border-0">
+                <span className="font-medium text-heading">{a.full_name ?? a.email}</span>
                 <span className="mt-0.5 block text-muted">{a.email}</span>
               </div>
             ))
           )}
           {u.status === "suspended" && (
-            <p className="mt-4 border-t border-line pt-3 text-xs text-muted">
+            <p className="mt-4 border-t border-cardline pt-3 text-xs text-muted">
               Suspension is reversible and non-destructive: data is kept, placements stay published read-only.
             </p>
           )}

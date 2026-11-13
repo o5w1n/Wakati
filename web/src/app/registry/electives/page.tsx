@@ -60,27 +60,27 @@ export default async function ElectiveOverlap() {
         sub={`${sem?.name ?? "No semester"} · pairs that share students must never run in parallel (H4).`}
       />
       <div className="mb-6 grid gap-3 sm:grid-cols-3">
-        <div className="border border-line bg-paper p-4">
-          <div className="text-2xl font-semibold text-ink">{keepApart}</div>
+        <div className="rounded-xl border border-cardline bg-card p-4">
+          <div className="text-2xl font-semibold text-heading">{keepApart}</div>
           <div className="text-[13px] text-muted">pairs must stay apart</div>
         </div>
-        <div className="border border-line bg-paper p-4">
-          <div className="text-2xl font-semibold text-ink">{choiceCount}</div>
+        <div className="rounded-xl border border-cardline bg-card p-4">
+          <div className="text-2xl font-semibold text-heading">{choiceCount}</div>
           <div className="text-[13px] text-muted">elective choices recorded</div>
         </div>
-        <div className="border border-line bg-paper p-4">
-          <div className="text-2xl font-semibold text-ink">{pairs.length > 0 ? pairs[0].shared : "—"}</div>
+        <div className="rounded-xl border border-cardline bg-card p-4">
+          <div className="text-2xl font-semibold text-heading">{pairs.length > 0 ? pairs[0].shared : "—"}</div>
           <div className="text-[13px] text-muted">largest shared enrolment</div>
         </div>
       </div>
       {pairs.length === 0 ? (
-        <p className="border border-dashed border-line bg-paper p-6 text-center text-[13px] text-muted">
+        <p className="border border-dashed border-cardline bg-card p-6 text-center text-[13px] text-muted">
           No overlapping pairs. Add elective choices under Master Data → Students and the map rebuilds on the next pre-check.
         </p>
       ) : (
-        <table className="w-full border border-line bg-paper text-[13px]">
+        <table className="w-full border border-cardline bg-card text-[13px]">
           <thead>
-            <tr className="border-b border-line bg-canvas-2 text-left text-muted">
+            <tr className="border-b border-cardline bg-page text-left text-muted">
               <th className="px-3 py-2 font-medium">Course A</th>
               <th className="px-3 py-2 font-medium">Course B</th>
               <th className="px-3 py-2 font-medium">Shared students</th>
@@ -89,7 +89,7 @@ export default async function ElectiveOverlap() {
           </thead>
           <tbody>
             {pairs.map((r, i) => (
-              <tr key={i} className="border-b border-line last:border-0">
+              <tr key={i} className="border-b border-cardline last:border-0">
                 <td className="px-3 py-2 font-mono text-xs">{r.a}</td>
                 <td className="px-3 py-2 font-mono text-xs">{r.b}</td>
                 <td className="px-3 py-2">{r.shared}</td>

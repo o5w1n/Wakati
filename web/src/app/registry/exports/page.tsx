@@ -35,19 +35,19 @@ export default async function Exports() {
     <Shell role="registry" active="/registry/exports">
       <PageHeader title="Exports" sub={current ? `${current.status} · ${new Date(current.created_at).toLocaleString()}` : "No version yet."} />
       <div className="grid gap-3 lg:grid-cols-2">
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">New export</div>
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 text-sm font-medium text-heading">New export</div>
           <ExportForm versions={versions} />
         </section>
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-3 text-sm font-medium text-ink">Version history</div>
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-3 text-sm font-medium text-heading">Version history</div>
           {versions.length === 0 ? (
             <p className="text-[13px] text-muted">No versions yet.</p>
           ) : (
             versions.map((v) => (
-              <div key={v.id} className="flex items-center justify-between border-b border-line py-2.5 text-[13px] last:border-0">
+              <div key={v.id} className="flex items-center justify-between border-b border-cardline py-2.5 text-[13px] last:border-0">
                 <span>
-                  <span className="font-medium text-ink">{new Date(v.created_at).toLocaleString()}</span>
+                  <span className="font-medium text-heading">{new Date(v.created_at).toLocaleString()}</span>
                   <span className="mt-0.5 block text-muted">{sem?.name}</span>
                 </span>
                 <StatusBadge tone={v.status === "published" ? "ok" : v.status === "draft" ? "warn" : "neutral"}>{v.status}</StatusBadge>

@@ -46,8 +46,8 @@ export default async function Members() {
       <PageHeader title="Members" sub="Invite staff, approve join requests, manage roles." />
 
       {reqs.length > 0 && (
-        <section className="mb-6 border border-line bg-paper p-4">
-          <div className="mb-3 text-sm font-medium text-ink">
+        <section className="mb-6 rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-3 text-sm font-medium text-heading">
             Join requests <StatusBadge tone="warn">{String(reqs.length)} pending</StatusBadge>
           </div>
           <DataTable
@@ -83,8 +83,8 @@ export default async function Members() {
       )}
 
       <div className="grid gap-3 lg:grid-cols-3">
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Invite by email</div>
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 text-sm font-medium text-heading">Invite by email</div>
           <form action={async (f: FormData) => { await inviteMember(f); }} className="space-y-3">
             <Field label="Email" hint="Must match the institution domain.">
               <input name="email" type="email" required placeholder="person@acity.edu.gh" className={inputCls} />
@@ -100,16 +100,16 @@ export default async function Members() {
             <button className={btnPrimaryCls}>Send invite</button>
           </form>
           {invs.length > 0 && (
-            <div className="mt-4 border-t border-line pt-3">
+            <div className="mt-4 border-t border-cardline pt-3">
               <div className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">Pending invites</div>
               {invs.map((i) => (
                 <div key={i.id} className="flex items-center justify-between py-1.5 text-[13px]">
                   <span>
-                    <span className="font-medium text-ink">{i.email}</span>
+                    <span className="font-medium text-heading">{i.email}</span>
                     <span className="ml-2 text-muted">{i.role} · expires {new Date(i.expires_at).toLocaleDateString()}</span>
                   </span>
                   <form action={async () => { await revokeInvite(i.id); }}>
-                    <button className="text-indigo-deep hover:underline">Revoke</button>
+                    <button className="text-primary hover:underline">Revoke</button>
                   </form>
                 </div>
               ))}
@@ -117,8 +117,8 @@ export default async function Members() {
           )}
         </section>
 
-        <section className="border border-line bg-paper p-4 lg:col-span-2">
-          <div className="mb-3 text-sm font-medium text-ink">All members</div>
+        <section className="rounded-xl border border-cardline bg-card p-4 lg:col-span-2">
+          <div className="mb-3 text-sm font-medium text-heading">All members</div>
           {mems.length === 0 ? (
             <EmptyState title="No members yet" sub="Invite your first lecturer to get started." />
           ) : (

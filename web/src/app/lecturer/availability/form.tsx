@@ -10,9 +10,9 @@ type Cell = "available" | "preferred" | "unavailable";
 const DAY_NAMES = ["", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
 const cellCls: Record<Cell, string> = {
-  available: "bg-paper hover:bg-canvas",
-  preferred: "bg-indigo-deep/10 hover:bg-indigo-deep/20",
-  unavailable: "bg-ink text-white hover:bg-body",
+  available: "bg-card hover:bg-page",
+  preferred: "bg-primary/10 hover:bg-primary/20",
+  unavailable: "bg-heading text-white hover:bg-body",
 };
 
 export function AvailabilityForm({ semesterId, semesterName, days, maxPeriod, initial }: {
@@ -66,30 +66,30 @@ export function AvailabilityForm({ semesterId, semesterName, days, maxPeriod, in
         sub={`${semesterName} · click a cell to cycle Available → Preferred → Unavailable`}
         actions={<button className={btnPrimaryCls} disabled={pending} onClick={submit}>{pending ? "Saving…" : "Submit availability"}</button>}
       />
-      {msg && <div className="mb-3 border border-line bg-paper p-3 text-[13px]">{msg}</div>}
+      {msg && <div className="mb-3 border border-cardline bg-card p-3 text-[13px]">{msg}</div>}
       <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-muted">
-        <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 border border-line bg-paper" /> Available</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 bg-indigo-deep/20" /> Preferred</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 bg-ink" /> Unavailable</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 rounded-xl border border-cardline bg-card" /> Available</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 bg-primary/20" /> Preferred</span>
+        <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 bg-heading" /> Unavailable</span>
         <span className="ml-auto">{counts.unavailable} unavailable · {counts.preferred} preferred</span>
       </div>
-      <div className="tt-scroll overflow-auto border border-line bg-paper">
+      <div className="tt-scroll overflow-auto rounded-xl border border-cardline bg-card">
         <table className="w-full min-w-[680px] border-collapse">
           <thead>
             <tr>
-              <th className="w-20 border-b border-line bg-canvas-2 px-2 py-2 text-left text-xs font-medium text-muted" />
+              <th className="w-20 border-b border-cardline bg-page px-2 py-2 text-left text-xs font-medium text-muted" />
               {Array.from({ length: maxPeriod }, (_, i) => i + 1).map((p) => (
-                <th key={p} className="border-b border-l border-line bg-canvas-2 px-1 py-2 text-center text-[11px] font-medium text-muted">P{p}</th>
+                <th key={p} className="border-b border-l border-cardline bg-page px-1 py-2 text-center text-[11px] font-medium text-muted">P{p}</th>
               ))}
-              <th className="w-40 border-b border-line bg-canvas-2 px-2 py-2 text-left text-xs font-medium text-muted">Quick actions</th>
+              <th className="w-40 border-b border-cardline bg-page px-2 py-2 text-left text-xs font-medium text-muted">Quick actions</th>
             </tr>
           </thead>
           <tbody>
             {days.map((d) => (
               <tr key={d}>
-                <td className="border-b border-line bg-canvas-2 px-2 py-2 text-xs font-medium text-ink">{DAY_NAMES[d] ?? `Day ${d}`}</td>
+                <td className="border-b border-cardline bg-page px-2 py-2 text-xs font-medium text-heading">{DAY_NAMES[d] ?? `Day ${d}`}</td>
                 {Array.from({ length: maxPeriod }, (_, i) => i + 1).map((p) => (
-                  <td key={p} className="border-b border-l border-line p-0">
+                  <td key={p} className="border-b border-l border-cardline p-0">
                     <button
                       onClick={() => cycle(d, p)}
                       title={`${DAY_NAMES[d]} P${p} — ${grid[`${d}:${p}`]}`}
@@ -99,10 +99,10 @@ export function AvailabilityForm({ semesterId, semesterName, days, maxPeriod, in
                     </button>
                   </td>
                 ))}
-                <td className="border-b border-line px-2 py-1">
+                <td className="border-b border-cardline px-2 py-1">
                   <div className="flex gap-1">
-                    <button onClick={() => setDay(d, "unavailable")} className="border border-line px-1.5 py-1 text-[11px] text-muted hover:text-ink">Day off</button>
-                    <button onClick={() => setDay(d, "available")} className="border border-line px-1.5 py-1 text-[11px] text-muted hover:text-ink">Clear</button>
+                    <button onClick={() => setDay(d, "unavailable")} className="border border-cardline px-1.5 py-1 text-[11px] text-muted hover:text-heading">Day off</button>
+                    <button onClick={() => setDay(d, "available")} className="border border-cardline px-1.5 py-1 text-[11px] text-muted hover:text-heading">Clear</button>
                   </div>
                 </td>
               </tr>

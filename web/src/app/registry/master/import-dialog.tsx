@@ -30,9 +30,9 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
-      <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto border border-line bg-paper p-6" onClick={(e) => e.stopPropagation()}>
+      <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-xl border border-cardline bg-card p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-ink">Import CSVs</h2>
+          <h2 className="text-base font-semibold text-heading">Import CSVs</h2>
           <button onClick={onClose} aria-label="Close"><X size={16} /></button>
         </div>
         <p className="mt-1 text-[13px] text-muted">
@@ -40,22 +40,22 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
         </p>
         <form action={action} className="mt-4 space-y-3">
           <label className="block text-[13px]">
-            <span className="mb-1 block font-medium text-ink">Semester (required for sessions, periods, availability)</span>
-            <select name="semester_id" className="h-9 w-full border border-line bg-paper px-2 text-[13px]">
+            <span className="mb-1 block font-medium text-heading">Semester (required for sessions, periods, availability)</span>
+            <select name="semester_id" className="h-9 w-full border border-cardline bg-card px-2 text-[13px]">
               <option value="">Master data only (no semester files)</option>
               {semesters.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
             </select>
           </label>
           <div className="grid gap-2">
             {FILES.map((f) => (
-              <label key={f} className="flex items-center justify-between gap-3 border border-line px-3 py-2 text-[13px]">
-                <span className="font-mono text-ink">{f}</span>
+              <label key={f} className="flex items-center justify-between gap-3 border border-cardline px-3 py-2 text-[13px]">
+                <span className="font-mono text-heading">{f}</span>
                 <input type="file" name={f} accept=".csv" className="max-w-[220px] text-xs text-muted" />
               </label>
             ))}
           </div>
           {state?.errors && state.errors.length > 0 && (
-            <ul className="max-h-40 overflow-y-auto border border-line p-2 text-[12px] text-bad-text">
+            <ul className="max-h-40 overflow-y-auto border border-cardline p-2 text-[12px] text-bad-text">
               {state.errors.map((e, i) => <li key={i}>{e.file || "general"}:{e.line} — {e.error}</li>)}
             </ul>
           )}

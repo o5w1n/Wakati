@@ -1,4 +1,4 @@
-import { Lock } from "lucide-react";
+import { AlertTriangle, Lock } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 export type SlotStatus = "ok" | "warn" | "bad" | "empty";
@@ -7,32 +7,30 @@ export interface GridSession {
   id: string;
   courseCodes: string[];
   title: string;
-  tags: string[]; // Theory, Practical, Elective, Group A…
+  tags?: string[];
   lecturer: string;
   room: string;
   locked?: boolean;
-  span?: number; // periods covered (default 1)
+  span?: number;
 }
 
 export interface GridDay {
   day: number;
   label: string;
-  slots: (GridSession | null)[]; // index = period_index-1
+  slots: (GridSession | null)[];
 }
 
 export interface GridPeriod {
   index: number;
-  label: string; // "08:00–09:00"
+  label: string;
 }
 
-function statusCls(status: SlotStatus) {
-  switch (status) {
-    case "ok": return "bg-ok-bg text-ok-text";
-    case "warn": return "bg-warn-bg text-warn-text";
-    case "bad": return "bg-bad-bg text-bad-text";
-    default: return "bg-paper";
-  }
-}
+const DOT: Record<SlotStatus, string> = {
+  ok: "bg-ok-text",
+  warn: "bg-warn-text",
+  bad: "bg-bad-text",
+  empty: "bg-muted",
+};
 
 export function TimetableCell({
   session,
@@ -48,7 +46,11 @@ export function TimetableCell({
   onClick?: () => void;
 }) {
   if (!session) {
-    return <div className="h-full min-h-[64px] bg-paper" />;
+    return (
+      <div className="flex h-full min-h-[88px] items-center justify-center text-muted">
+        <span aria-hidden>–</span>
+      </div>
+    );
   }
   return (
     <button
@@ -56,38 +58,54 @@ export function TimetableCell({
       title={reason}
       onClick={onClick}
       className={cn(
-        "flex h-full min-h-[64px] w-full flex-col items-stretch gap-0.5 border-l-2 px-2 py-1.5 text-left transition-colors",
-        status === "ok" && "border-ok-text bg-ok-bg/40 hover:bg-ok-bg/70",
-        status === "warn" && "border-warn-text bg-warn-bg/50 hover:bg-warn-bg/80",
-        status === "bad" && "border-bad-text bg-bad-bg/50 hover:bg-bad-bg/80",
-        status === "empty" && "border-line bg-paper hover:bg-canvas",
-        selected && "outline outline-1 outline-offset-[-1px] outline-indigo-deep"
+        "relative flex h-full min-h-[88px] w-full flex-col justify-start gap-0.5 rounded-lg border px-2.5 py-2 text-left transition-colors",
+        status === "ok" && "border-ok-text/20 bg-ok-bg",
+        status === "warn" && "border-warn-text/25 bg-warn-bg",
+        status === "bad" && "border-bad-text/25 bg-bad-bg",
+        status === "empty" && "border-cardline bg-card hover:bg-page",
+        selected && "outline outline-2 outline-offset-1 outline-primary"
       )}
     >
-      <div className="flex items-start justify-between gap-1">
-        <span className="text-[11px] font-semibold leading-tight text-ink">
-          {session.courseCodes.join(" / ")}
-        </span>
-        {session.locked && <Lock size={11} className="mt-0.5 shrink-0 text-muted" />}
-      </div>
-      <span className="truncate text-[11px] leading-tight text-body">{session.title}</span>
-      {session.tags.length > 0 && (
-        <span className="flex flex-wrap gap-1">
-          {session.tags.map((t) => (
-            <span key={t} className="bg-canvas-2 px-1 py-px text-[10px] leading-tight text-muted">
-              {t}
-            </span>
-          ))}
+      {status === "bad" && (
+        <span className="absolute right-1.5 top-1.5 text-bad-text" aria-label="Hard clash">
+          <AlertTriangle size={14} strokeWidth={2.25} />
         </span>
       )}
-      <span className="text-[11px] leading-tight text-muted">{session.lecturer}</span>
-      <span className="text-[11px] font-bold leading-tight text-ink">{session.room}</span>
-      {(status === "warn" || status === "bad") && reason && (
-        <span className={cn("mt-0.5 px-1 py-px text-[10px] leading-tight", statusCls(status))}>
-          {reason}
+      {session.locked && (
+        <span className="absolute bottom-1.5 right-1.5 text-body" aria-label="Locked">
+          <Lock size={11} />
         </span>
+      )}
+      <span className="pr-4 text-[12px] font-bold leading-tight text-heading">
+        {session.courseCodes.join(" / ")}
+      </span>
+      <span className="truncate text-[12px] leading-tight text-body">{session.title}</span>
+      <span className="mt-0.5 flex items-center gap-1.5 text-[11px] leading-tight text-body">
+        <span className={cn("h-1.5 w-1.5 rounded-full", DOT[status === "empty" ? "ok" : status])} aria-hidden />
+        {session.lecturer}
+      </span>
+      <span className="flex items-center gap-1.5 text-[11px] leading-tight text-body">
+        <span className={cn("h-1.5 w-1.5 rounded-full", DOT[status === "empty" ? "ok" : status])} aria-hidden />
+        <strong className="font-semibold text-heading">{session.room}</strong>
+      </span>
+      {(status === "warn" || status === "bad") && reason && (
+        <span className="sr-only">{reason}</span>
       )}
     </button>
+  );
+}
+
+/** Hover popover for clash cells — white card w/ triangle + bold label + reason. */
+export function ClashPopover({ tone, title, reason }: { tone: "bad" | "warn"; title: string; reason: string }) {
+  const col = tone === "bad" ? "text-bad-text" : "text-warn-text";
+  return (
+    <div className="pointer-events-none absolute z-20 w-56 rounded-xl border border-cardline bg-card p-3 shadow-[0_8px_24px_rgba(17,24,39,0.12)]">
+      <div className={cn("flex items-center gap-1.5 text-[13px] font-bold", col)}>
+        <AlertTriangle size={14} strokeWidth={2.25} aria-hidden />
+        {title}
+      </div>
+      <p className="mt-1 text-[12px] leading-snug text-body">{reason}</p>
+    </div>
   );
 }
 
@@ -107,15 +125,13 @@ export function TimetableGrid({
   onSelect?: (id: string) => void;
 }) {
   return (
-    <div className="tt-scroll overflow-auto border border-line bg-paper">
-      <table className="w-full min-w-[720px] border-collapse">
+    <div className="tt-scroll overflow-auto rounded-xl border border-cardline bg-card">
+      <table className="w-full min-w-[760px] border-collapse">
         <thead>
           <tr>
-            <th className="sticky left-0 z-[1] w-24 border-b border-r border-line bg-canvas-2 px-2 py-2 text-left text-xs font-medium text-muted">
-              Time
-            </th>
+            <th className="w-28 px-3 py-2.5 text-left text-xs font-medium text-muted" />
             {days.map((d) => (
-              <th key={d.day} className="border-b border-line bg-canvas-2 px-2 py-2 text-left text-xs font-medium text-ink">
+              <th key={d.day} className="px-2 py-2.5 text-left text-[13px] font-semibold text-heading">
                 {d.label}
               </th>
             ))}
@@ -124,14 +140,14 @@ export function TimetableGrid({
         <tbody>
           {periods.map((p, pi) => (
             <tr key={p.index}>
-              <td className="sticky left-0 border-b border-r border-line bg-canvas-2 px-2 py-1 align-top text-[11px] text-muted">
+              <td className="whitespace-nowrap px-3 py-2 align-top text-[12px] font-medium text-body">
                 {p.label}
               </td>
               {days.map((d) => {
                 const s = d.slots[pi] ?? null;
-                const st = (s && statuses?.[s.id]) || "empty";
+                const st = (s && statuses?.[s.id]) || (s ? "ok" : "empty");
                 return (
-                  <td key={d.day} className="border-b border-line p-0 align-top">
+                  <td key={d.day} className="p-1 align-top">
                     <TimetableCell
                       session={s}
                       status={s ? st : "empty"}
@@ -150,34 +166,49 @@ export function TimetableGrid({
   );
 }
 
-// ---- sample data for previews (Academic City default grid) ----
+// ---- sample data mirroring the reference board ----
 export const SAMPLE_PERIODS: GridPeriod[] = [
-  { index: 1, label: "08:00–09:00" },
-  { index: 2, label: "09:10–10:10" },
-  { index: 3, label: "10:20–11:20" },
-  { index: 4, label: "11:30–12:30" },
-  { index: 5, label: "12:40–13:40" },
-  { index: 6, label: "13:50–14:50" },
-  { index: 7, label: "15:00–16:00" },
-  { index: 8, label: "16:10–17:10" },
-  { index: 9, label: "17:20–18:20" },
+  { index: 1, label: "8:00 – 10:00" },
+  { index: 2, label: "10:00 – 12:00" },
+  { index: 3, label: "12:00 – 2:00" },
+  { index: 4, label: "2:00 – 4:00" },
+  { index: 5, label: "4:00 – 6:00" },
 ];
 
-const empty = () => Array<GridSession | null>(9).fill(null);
+function cell(id: string, code: string, title: string, lecturer: string, room: string): GridSession {
+  const [c, t] = [code, title];
+  return { id, courseCodes: [c], title: t, lecturer, room };
+}
 
 export const SAMPLE_DAYS: GridDay[] = (() => {
-  const mon = empty(); const tue = empty(); const wed = empty(); const thu = empty(); const fri = empty();
-  mon[0] = { id: "s1", courseCodes: ["CS302"], title: "Algorithms", tags: ["Theory"], lecturer: "Dr. A. Mensah", room: "L-1" };
-  mon[1] = mon[0];
-  tue[2] = { id: "s2", courseCodes: ["AI4136", "CS4135"], title: "Computer Security", tags: ["Theory", "Elective"], lecturer: "Prof. K. Yamak", room: "L-3" };
-  tue[3] = tue[2];
-  wed[4] = { id: "s3", courseCodes: ["ML401"], title: "Machine Learning", tags: ["Practical", "Group A"], lecturer: "TBA", room: "Lab-B" };
-  thu[5] = { id: "s4", courseCodes: ["CW400"], title: "Career Workshop", tags: ["Workshop"], lecturer: "Dr. A. Mensah", room: "L-1" };
+  const mon = Array<GridSession | null>(5).fill(null);
+  const tue = Array<GridSession | null>(5).fill(null);
+  const wed = Array<GridSession | null>(5).fill(null);
+  const thu = Array<GridSession | null>(5).fill(null);
+  const fri = Array<GridSession | null>(5).fill(null);
+  mon[0] = cell("m1", "MATH101", "Calculus", "L. Mensah", "LT1");
+  tue[0] = cell("t1", "CS201", "Data Structures", "E. Agyemang", "LT2");
+  wed[0] = cell("w1", "PHY101", "Physics", "R. Darko", "LT1");
+  thu[0] = cell("th1", "CS201", "Data Structures", "E. Agyemang", "LT2");
+  fri[0] = cell("f1", "MATH101", "Calculus", "L. Mensah", "LT1");
+  tue[1] = cell("t2", "ELEC101", "Networks", "T. Mensah", "LAB1");
+  thu[1] = cell("th2", "STA201", "Statistics", "D. Osei", "LT3");
   return [
-    { day: 1, label: "Monday", slots: mon },
-    { day: 2, label: "Tuesday", slots: tue },
-    { day: 3, label: "Wednesday", slots: wed },
-    { day: 4, label: "Thursday", slots: thu },
-    { day: 5, label: "Friday", slots: fri },
+    { day: 1, label: "Mon", slots: mon },
+    { day: 2, label: "Tue", slots: tue },
+    { day: 3, label: "Wed", slots: wed },
+    { day: 4, label: "Thu", slots: thu },
+    { day: 5, label: "Fri", slots: fri },
   ];
 })();
+
+export const SAMPLE_STATUSES: Record<string, SlotStatus> = {
+  m1: "ok", t1: "ok", w1: "ok", f1: "ok", th2: "ok",
+  t2: "warn",
+  th1: "bad",
+};
+
+export const SAMPLE_REASONS: Record<string, string> = {
+  t2: "Breaks a preference: T. Mensah prefers mornings.",
+  th1: "CS201 is already scheduled in this slot.",
+};

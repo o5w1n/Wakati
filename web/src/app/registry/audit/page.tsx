@@ -36,13 +36,13 @@ export default async function RegistryAudit() {
     <Shell role="registry" active="/registry/audit">
       <PageHeader title="Audit Log" sub={`Every change${sem ? ` to ${sem.name}` : ""}, kept for at least a year. Overrides always carry a reason.`} />
       {rows.length === 0 ? (
-        <p className="border border-dashed border-line bg-paper p-6 text-center text-[13px] text-muted">
+        <p className="border border-dashed border-cardline bg-card p-6 text-center text-[13px] text-muted">
           No changes logged yet. Edits in the editor write here automatically.
         </p>
       ) : (
-        <table className="w-full border border-line bg-paper text-[13px]">
+        <table className="w-full border border-cardline bg-card text-[13px]">
           <thead>
-            <tr className="border-b border-line bg-canvas-2 text-left text-muted">
+            <tr className="border-b border-cardline bg-page text-left text-muted">
               <th className="px-3 py-2 font-medium">When</th>
               <th className="px-3 py-2 font-medium">Action</th>
               <th className="px-3 py-2 font-medium">Reason</th>
@@ -50,7 +50,7 @@ export default async function RegistryAudit() {
           </thead>
           <tbody>
             {rows.map((r) => (
-              <tr key={r.id} className="border-b border-line last:border-0">
+              <tr key={r.id} className="border-b border-cardline last:border-0">
                 <td className="whitespace-nowrap px-3 py-2 text-muted">{new Date(r.created_at).toLocaleString()}</td>
                 <td className="px-3 py-2">
                   {r.action}

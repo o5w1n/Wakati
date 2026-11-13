@@ -33,7 +33,7 @@ export function RoomDay({ role, rooms, days, maxPeriod, occ }: {
             onClick={() => setDay(d)}
             className={cn(
               "min-w-14 flex-1 border px-2 py-2 text-[13px]",
-              day === d ? "border-ink bg-ink font-medium text-white" : "border-line bg-paper text-muted"
+              day === d ? "border-heading bg-heading font-medium text-white" : "border-cardline bg-card text-muted"
             )}
           >
             {DAY_NAMES[d] ?? `Day ${d}`}
@@ -41,33 +41,33 @@ export function RoomDay({ role, rooms, days, maxPeriod, occ }: {
         ))}
       </div>
       {rooms.length === 0 ? (
-        <p className="mb-6 border border-dashed border-line bg-paper p-6 text-center text-[13px] text-muted">
+        <p className="mb-6 border border-dashed border-cardline bg-card p-6 text-center text-[13px] text-muted">
           No rooms imported yet.
         </p>
       ) : (
-        <div className="tt-scroll mb-6 overflow-auto border border-line bg-paper">
+        <div className="tt-scroll mb-6 overflow-auto rounded-xl border border-cardline bg-card">
           <table className="w-full min-w-[720px] border-collapse text-[13px]">
             <thead>
               <tr>
-                <th className="sticky left-0 border-b border-r border-line bg-canvas-2 px-3 py-2 text-left text-xs font-medium text-muted">Room</th>
+                <th className="sticky left-0 border-b border-r border-cardline bg-page px-3 py-2 text-left text-xs font-medium text-muted">Room</th>
                 {Array.from({ length: maxPeriod }, (_, i) => i + 1).map((p) => (
-                  <th key={p} className="border-b border-line bg-canvas-2 px-2 py-2 text-center text-[11px] font-medium text-muted">P{p}</th>
+                  <th key={p} className="border-b border-cardline bg-page px-2 py-2 text-center text-[11px] font-medium text-muted">P{p}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {rooms.map((r) => (
                 <tr key={r.id}>
-                  <td className="sticky left-0 border-b border-r border-line bg-paper px-3 py-2">
-                    <span className="font-semibold text-ink">{r.code}</span>
+                  <td className="sticky left-0 border-b border-r border-cardline bg-card px-3 py-2">
+                    <span className="font-semibold text-heading">{r.code}</span>
                     <span className="ml-2 text-xs text-muted">{r.type} · {r.capacity}</span>
                   </td>
                   {Array.from({ length: maxPeriod }, (_, i) => i + 1).map((p) => {
                     const c = code(r.id, day, p);
                     return (
-                      <td key={p} className="border-b border-line px-1 py-1 text-center" title={c ?? `Free`}>
+                      <td key={p} className="border-b border-cardline px-1 py-1 text-center" title={c ?? `Free`}>
                         {c ? (
-                          <span className="inline-block bg-canvas-2 px-1.5 py-0.5 font-mono text-[11px] text-ink">{c}</span>
+                          <span className="inline-block bg-page px-1.5 py-0.5 font-mono text-[11px] text-heading">{c}</span>
                         ) : (
                           <span className="text-muted">·</span>
                         )}
@@ -81,8 +81,8 @@ export function RoomDay({ role, rooms, days, maxPeriod, occ }: {
         </div>
       )}
 
-      <section className="border border-line bg-paper p-4">
-        <div className="mb-3 text-sm font-medium text-ink">Free-room finder</div>
+      <section className="rounded-xl border border-cardline bg-card p-4">
+        <div className="mb-3 text-sm font-medium text-heading">Free-room finder</div>
         <div className="grid gap-3 sm:grid-cols-4">
           <Field label="Day">
             <select value={fDay} onChange={(e) => setFDay(Number(e.target.value))} className={inputCls}>
@@ -102,7 +102,7 @@ export function RoomDay({ role, rooms, days, maxPeriod, occ }: {
           </div>
         </div>
         {searched && (
-          <div className="mt-3 border-t border-line pt-3">
+          <div className="mt-3 border-t border-cardline pt-3">
             {free.length === 0 ? (
               <p className="text-[13px] text-muted">
                 No room seats {fCap}+ free on {DAY_NAMES[fDay]} P{fPeriod}. Try a smaller group or another period.
@@ -111,7 +111,7 @@ export function RoomDay({ role, rooms, days, maxPeriod, occ }: {
               <ul className="divide-y divide-line">
                 {free.map((r) => (
                   <li key={r.id} className="flex items-center justify-between py-2 text-[13px]">
-                    <span><strong className="text-ink">{r.code}</strong> <span className="text-muted">· {r.type} · seats {r.capacity}</span></span>
+                    <span><strong className="text-heading">{r.code}</strong> <span className="text-muted">· {r.type} · seats {r.capacity}</span></span>
                     <StatusBadge tone="ok">Free {DAY_NAMES[fDay]} P{fPeriod}</StatusBadge>
                   </li>
                 ))}

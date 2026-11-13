@@ -7,8 +7,8 @@ export default function PlatformSettings() {
     <Shell role="superadmin" active="/admin/settings">
       <PageHeader title="Platform Settings" sub="Defaults for new institutions. Tenants can override their own grid and rules." />
       <div className="grid max-w-2xl gap-3">
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 flex items-center gap-2 text-sm font-medium text-ink">
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 flex items-center gap-2 text-sm font-medium text-heading">
             Registration <StatusBadge tone="neutral">manual for now</StatusBadge>
           </div>
           <div className="space-y-3">
@@ -27,8 +27,8 @@ export default function PlatformSettings() {
             </Field>
           </div>
         </section>
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-4 flex items-center gap-2 text-sm font-medium text-ink">
+        <section className="rounded-xl border border-cardline bg-card p-4">
+          <div className="mb-4 flex items-center gap-2 text-sm font-medium text-heading">
             Solver defaults <StatusBadge tone="neutral">manual for now</StatusBadge>
           </div>
           <div className="space-y-3">

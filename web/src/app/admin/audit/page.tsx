@@ -26,11 +26,11 @@ export default async function PlatformAudit() {
     <Shell role="superadmin" active="/admin/audit">
       <PageHeader title="Audit Log" sub="Platform-level actions. Tenant timetabling changes live in each institution's own log." />
       {list.length === 0 ? (
-        <p className="border border-dashed border-line bg-paper p-6 text-center text-[13px] text-muted">No institutions yet.</p>
+        <p className="border border-dashed border-cardline bg-card p-6 text-center text-[13px] text-muted">No institutions yet.</p>
       ) : (
-        <table className="w-full border border-line bg-paper text-[13px]">
+        <table className="w-full border border-cardline bg-card text-[13px]">
           <thead>
-            <tr className="border-b border-line bg-canvas-2 text-left text-muted">
+            <tr className="border-b border-cardline bg-page text-left text-muted">
               <th className="px-3 py-2 font-medium">Registered</th>
               <th className="px-3 py-2 font-medium">Institution</th>
               <th className="px-3 py-2 font-medium">Status</th>
@@ -38,7 +38,7 @@ export default async function PlatformAudit() {
           </thead>
           <tbody>
             {list.map((u) => (
-              <tr key={u.id} className="border-b border-line last:border-0">
+              <tr key={u.id} className="border-b border-cardline last:border-0">
                 <td className="whitespace-nowrap px-3 py-2 text-muted">{new Date(u.created_at).toLocaleString()}</td>
                 <td className="px-3 py-2">{u.name} <span className="font-mono text-xs text-muted">{u.short_code}</span></td>
                 <td className="px-3 py-2">

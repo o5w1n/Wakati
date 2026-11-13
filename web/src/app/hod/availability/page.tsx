@@ -55,8 +55,8 @@ export default async function HodAvailability() {
   return (
     <Shell role="hod" active="/hod/availability">
       <PageHeader title="Availability" sub={`${sem.name} · department tracking`} />
-      <section className="border border-line bg-paper p-4">
-        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-ink">
+      <section className="rounded-xl border border-cardline bg-card p-4">
+        <div className="mb-3 flex items-center gap-2 text-sm font-medium text-heading">
           Department tracking
           {missing > 0 ? (
             <StatusBadge tone="warn">{missing} of {list.length} not submitted</StatusBadge>
@@ -69,7 +69,7 @@ export default async function HodAvailability() {
         ) : (
           <table className="w-full text-[13px]">
             <thead>
-              <tr className="border-b border-line text-left text-muted">
+              <tr className="border-b border-cardline text-left text-muted">
                 <th className="py-2 font-medium">Lecturer</th>
                 <th className="py-2 font-medium">Status</th>
                 <th className="py-2 font-medium">Unavailable</th>
@@ -80,8 +80,8 @@ export default async function HodAvailability() {
               {list.map((l) => {
                 const e = byLect.get(l.id);
                 return (
-                  <tr key={l.id} className="border-b border-line last:border-0">
-                    <td className="py-2 font-medium text-ink">{l.name}</td>
+                  <tr key={l.id} className="border-b border-cardline last:border-0">
+                    <td className="py-2 font-medium text-heading">{l.name}</td>
                     <td className="py-2">{e ? <StatusBadge tone="ok">Submitted</StatusBadge> : <StatusBadge tone="bad">Not submitted</StatusBadge>}</td>
                     <td className="py-2">{e?.unavailable ?? "—"}</td>
                     <td className="py-2">{e?.preferred ?? "—"}</td>

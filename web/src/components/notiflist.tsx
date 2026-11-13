@@ -47,7 +47,7 @@ export async function NotifList({ role, active, heading, revalidate }: NotifRole
       />
       <div className="max-w-2xl space-y-2">
         {items.length === 0 && (
-          <p className="border border-dashed border-line bg-paper p-6 text-center text-[13px] text-muted">
+          <p className="border border-dashed border-cardline bg-card p-6 text-center text-[13px] text-muted">
             No notifications yet.
           </p>
         )}
@@ -55,13 +55,13 @@ export async function NotifList({ role, active, heading, revalidate }: NotifRole
           <form key={n.id} action={async () => { await markRead(n.id); }}>
             <button
               className={cn(
-                "flex w-full items-start gap-3 border border-line bg-paper p-4 text-left",
-                !n.read && "border-l-2 border-l-indigo-deep"
+                "flex w-full items-start gap-3 rounded-xl border border-cardline bg-card p-4 text-left",
+                !n.read && "border-l-2 border-l-primary"
               )}
             >
-              <Bell size={16} className={n.read ? "mt-0.5 text-muted" : "mt-0.5 text-indigo-deep"} />
+              <Bell size={16} className={n.read ? "mt-0.5 text-muted" : "mt-0.5 text-primary"} />
               <span className="min-w-0">
-                <span className="flex items-center gap-2 text-[13px] font-medium text-ink">
+                <span className="flex items-center gap-2 text-[13px] font-medium text-heading">
                   {n.title}
                   {!n.read && <StatusBadge tone="accent">new</StatusBadge>}
                 </span>

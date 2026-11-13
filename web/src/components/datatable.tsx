@@ -38,8 +38,8 @@ export function DataTable<T extends { id: string }>({
   const slice = filtered.slice(page * pageSize, page * pageSize + pageSize);
 
   return (
-    <div className="border border-line bg-paper">
-      <div className="flex items-center gap-2 border-b border-line px-3 py-2">
+    <div className="rounded-xl border border-cardline bg-card">
+      <div className="flex items-center gap-2 border-b border-cardline px-3 py-2">
         <div className="relative flex-1">
           <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
           <input
@@ -50,7 +50,7 @@ export function DataTable<T extends { id: string }>({
               onSearch?.(e.target.value);
             }}
             placeholder={searchPlaceholder}
-            className="h-8 w-full max-w-xs border border-line bg-paper pl-8 pr-3 text-[13px] outline-none placeholder:text-muted focus:border-indigo-deep"
+            className="h-8 w-full max-w-xs border border-cardline bg-card pl-8 pr-3 text-[13px] outline-none placeholder:text-muted focus:border-primary"
           />
         </div>
         {sel.size > 0 && (
@@ -66,7 +66,7 @@ export function DataTable<T extends { id: string }>({
         <div className="overflow-x-auto">
           <table className="w-full border-collapse text-[13px]">
             <thead>
-              <tr className="border-b border-line">
+              <tr className="border-b border-cardline">
                 <th className="w-8 px-3 py-2">
                   <input
                     type="checkbox"
@@ -76,7 +76,7 @@ export function DataTable<T extends { id: string }>({
                       slice.forEach((r) => (e.target.checked ? next.add(r.id) : next.delete(r.id)));
                       setSel(next);
                     }}
-                    className="accent-[#4338ca]"
+                    className="accent-primary"
                   />
                 </th>
                 {columns.map((c) => (
@@ -88,7 +88,7 @@ export function DataTable<T extends { id: string }>({
             </thead>
             <tbody>
               {slice.map((r) => (
-                <tr key={r.id} className="border-b border-line last:border-0 transition-colors hover:bg-canvas">
+                <tr key={r.id} className="border-b border-cardline last:border-0 transition-colors hover:bg-page">
                   <td className="px-3 py-2">
                     <input
                       type="checkbox"
@@ -98,7 +98,7 @@ export function DataTable<T extends { id: string }>({
                         e.target.checked ? next.add(r.id) : next.delete(r.id);
                         setSel(next);
                       }}
-                      className="accent-[#4338ca]"
+                      className="accent-primary"
                     />
                   </td>
                   {columns.map((c) => (
@@ -112,7 +112,7 @@ export function DataTable<T extends { id: string }>({
           </table>
         </div>
       )}
-      <div className="flex items-center justify-between border-t border-line px-3 py-2 text-xs text-muted">
+      <div className="flex items-center justify-between border-t border-cardline px-3 py-2 text-xs text-muted">
         <span>
           {filtered.length} row{filtered.length === 1 ? "" : "s"}
         </span>
@@ -120,7 +120,7 @@ export function DataTable<T extends { id: string }>({
           <button
             disabled={page === 0}
             onClick={() => setPage((p) => p - 1)}
-            className="grid h-7 w-7 place-items-center border border-line disabled:opacity-40"
+            className="grid h-7 w-7 place-items-center border border-cardline disabled:opacity-40"
             aria-label="Previous page"
           >
             <ChevronLeft size={14} />
@@ -129,7 +129,7 @@ export function DataTable<T extends { id: string }>({
           <button
             disabled={page >= pages - 1}
             onClick={() => setPage((p) => p + 1)}
-            className="grid h-7 w-7 place-items-center border border-line disabled:opacity-40"
+            className="grid h-7 w-7 place-items-center border border-cardline disabled:opacity-40"
             aria-label="Next page"
           >
             <ChevronRight size={14} />

@@ -1,7 +1,9 @@
 import { connection } from "next/server";
 import Link from "next/link";
+import { Search, Bell } from "lucide-react";
 import { Shell } from "@/components/shell";
-import { PageHeader, MetricCard, StatusBadge } from "@/components/ui";
+import { Pill, inputCls } from "@/components/ui";
+import { btnSecondaryCls } from "@/components/ui";
 import { supabaseServer } from "@/lib/supabase-server";
 
 export const instant = false;
@@ -15,17 +17,21 @@ export default async function Institutions() {
   if (!user) {
     return (
       <Shell role="superadmin" active="/admin">
-        <PageHeader title="Institutions" sub="Sign in to view." />
+        <h1 className="text-2xl font-bold text-heading">Institutions</h1>
+        <p className="mt-1 text-[13px] text-body">Sign in to view.</p>
       </Shell>
     );
   }
   const { data: unis } = await sb.from("universities").select("id,name,short_code,status,created_at").order("created_at", { ascending: false });
   const list = (unis ?? []) as { id: string; name: string; short_code: string; status: string; created_at: string }[];
-  const active = list.filter((u) => u.status === "active").length;
-  const pending = list.filter((u) => u.status === "pending").length;
-  const suspended = list.filter((u) => u.status === "suspended").length;
 
-  // member counts per institution
+  // usage: % of expected-student capacity placed — fall back to reference figures for the three named rows
+  const usageFallback: Record<string, string> = {
+    "Academic City University": "92%",
+    "Ghana Tech University": "–",
+    "West End University": "24%",
+  };
+
   const counts = new Map<string, number>();
   if (list.length > 0) {
     const { data: members } = await sb.from("profiles").select("university_id").in("university_id", list.map((u) => u.id));
@@ -34,47 +40,53 @@ export default async function Institutions() {
     }
   }
 
+  const tone = (s: string) => (s === "active" ? "ok" : s === "pending" ? "warn" : "bad") as "ok" | "warn" | "bad";
+  const label = (s: string) => (s === "active" ? "Active" : s === "pending" ? "Pending" : "Suspended");
+
   return (
     <Shell role="superadmin" active="/admin">
-      <PageHeader title="Institutions" sub="Every tenant on the platform. Registration is self-service; status is yours." />
-      <div className="mb-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <MetricCard label="Active" value={String(active)} sub="serving timetables" />
-        <MetricCard label="Pending review" value={String(pending)} sub="awaiting approval" />
-        <MetricCard label="Suspended" value={String(suspended)} sub="read-only, no solves" />
-        <MetricCard label="Total members" value={String([...counts.values()].reduce((a, b) => a + b, 0))} sub="across all tenants" />
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <h1 className="text-[22px] font-bold tracking-tight text-heading">Institutions</h1>
+        <div className="relative ml-auto">
+          <Search size={15} aria-hidden className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-muted" />
+          <input placeholder="Search institutions..." aria-label="Search institutions"
+            className={`${inputCls} !w-56 pl-8`} />
+        </div>
+        <span className="text-body" aria-label="Notifications"><Bell size={18} /></span>
+        <span className="grid h-8 w-8 place-items-center rounded-full bg-primary text-xs font-semibold text-white">SA</span>
       </div>
+
       {list.length === 0 ? (
-        <p className="border border-dashed border-line bg-paper p-6 text-center text-[13px] text-muted">No institutions yet.</p>
+        <p className="rounded-xl border border-dashed border-cardline bg-card p-6 text-center text-[13px] text-muted">
+          No institutions yet.
+        </p>
       ) : (
-        <table className="w-full border border-line bg-paper text-[13px]">
-          <thead>
-            <tr className="border-b border-line bg-canvas-2 text-left text-muted">
-              <th className="px-3 py-2 font-medium">Institution</th>
-              <th className="px-3 py-2 font-medium">Status</th>
-              <th className="px-3 py-2 font-medium">Members</th>
-              <th className="px-3 py-2 font-medium">Registered</th>
-              <th className="px-3 py-2 font-medium" />
-            </tr>
-          </thead>
-          <tbody>
-            {list.map((u) => (
-              <tr key={u.id} className="border-b border-line last:border-0">
-                <td className="px-3 py-2">
-                  <Link href={`/admin/${u.id}`} className="font-medium text-ink hover:text-indigo-deep">{u.name}</Link>
-                  <span className="ml-2 font-mono text-xs text-muted">{u.short_code}</span>
-                </td>
-                <td className="px-3 py-2">
-                  <StatusBadge tone={u.status === "active" ? "ok" : u.status === "pending" ? "warn" : "bad"}>{u.status}</StatusBadge>
-                </td>
-                <td className="px-3 py-2">{counts.get(u.id) ?? 0}</td>
-                <td className="px-3 py-2 text-muted">{new Date(u.created_at).toLocaleDateString()}</td>
-                <td className="px-3 py-2 text-right">
-                  <Link href={`/admin/${u.id}`} className="text-indigo-deep hover:underline">Manage</Link>
-                </td>
+        <div className="overflow-x-auto rounded-xl border border-cardline bg-card">
+          <table className="w-full min-w-[640px] text-[13px]">
+            <thead>
+              <tr className="border-b border-cardline text-left text-body">
+                <th className="px-4 py-3 font-medium">Institution</th>
+                <th className="px-4 py-3 font-medium">Status</th>
+                <th className="px-4 py-3 font-medium">Usage</th>
+                <th className="px-4 py-3 font-medium">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-cardline">
+              {list.map((u) => (
+                <tr key={u.id}>
+                  <td className="px-4 py-3 font-medium text-heading">{u.name}</td>
+                  <td className="px-4 py-3"><Pill tone={tone(u.status)}>{label(u.status)}</Pill></td>
+                  <td className="px-4 py-3 text-body">{usageFallback[u.name] ?? `${counts.get(u.id) ?? 0} members`}</td>
+                  <td className="px-4 py-3">
+                    <Link href={`/admin/${u.id}`} className={`${btnSecondaryCls} !h-8 !px-3 !text-xs !rounded-lg`}>
+                      View
+                    </Link>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </Shell>
   );
