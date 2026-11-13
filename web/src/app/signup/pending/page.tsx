@@ -14,7 +14,7 @@ export default function Pending() {
           <Clock size={22} className="mx-auto text-muted" strokeWidth={1.5} aria-hidden />
           <h1 className="mt-3 text-xl font-bold text-heading">Request pending</h1>
           <p className="mt-2 text-[13px] leading-relaxed text-body">
-            Your request to join is with the Registry. You&apos;ll get access as soon as they approve it.
+            Your request to join is with the Registry. You’ll get access as soon as they approve it.
           </p>
           <div className="mt-6">
             <Link href="/login" className={btnSecondaryCls}>Back to sign in</Link>

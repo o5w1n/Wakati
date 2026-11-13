@@ -25,7 +25,7 @@ export default function Reset() {
           </p>
         ) : (
           <>
-            <p className="mt-1 text-[13px] text-body">Enter your institution email and we&apos;ll send a reset link.</p>
+            <p className="mt-1 text-[13px] text-body">Enter your institution email and we’ll send a reset link.</p>
             <form action={action} className="mt-6 space-y-4">
               {result.error && <p className="text-[13px] text-bad-text">{result.error}</p>}
               <Field label="Email">

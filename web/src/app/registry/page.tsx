@@ -59,15 +59,19 @@ export default async function RegistryDashboard() {
           <Pill tone="ok">On Track</Pill>
         </StatCard>
         <StatCard icon={<Users size={20} aria-hidden />} label="Availability">
-          <span className="text-[15px] font-bold text-heading">{lectTotal > 0 ? `${pct}% Submitted` : "78% Submitted"}</span>
+          <span className="text-[15px] font-bold text-heading">{lectTotal > 0 ? `${pct}% submitted` : "78% submitted"}</span>
+          {lectTotal - submitted > 0 && lectTotal > 0 && (
+            <span className="mt-0.5 block text-xs text-body">{lectTotal - submitted} lecturers have not submitted yet</span>
+          )}
         </StatCard>
-        <StatCard icon={<Play size={20} aria-hidden />} label="Solve Jobs">
+        <StatCard icon={<Play size={20} aria-hidden />} label="Solve jobs">
           <Pill tone="ok">{lastJobStatus ?? "Completed"}</Pill>
         </StatCard>
-        <StatCard icon={<Clock size={20} aria-hidden />} label="Pending Requests">
+        <StatCard icon={<Clock size={20} aria-hidden />} label="Pending requests">
           <span className="inline-grid h-7 w-7 place-items-center rounded-full bg-warn-bg text-sm font-bold text-warn-text">
             {pendingJoins}
           </span>
+          <span className="mt-0.5 block text-xs text-body">{pendingJoins} requests need your review</span>
         </StatCard>
       </div>
 
@@ -88,6 +92,7 @@ export default async function RegistryDashboard() {
               </li>
             ))}
           </ul>
+          <p className="mt-3 text-xs text-muted">Nothing yet. Activity appears here once you start setting up.</p>
         </section>
 
         <section className="rounded-xl border border-cardline bg-card p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">

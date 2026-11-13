@@ -117,10 +117,11 @@ export default async function Generate() {
                     <div className="h-1.5 bg-primary" style={{ width: `${latest.progress}%` }} />
                   </div>
                   <div className="mt-2 text-xs text-muted">
-                    {latest.status === "queued" && "Queued — the solver worker picks it up."}
-                    {latest.status === "running" && `Running — ${latest.progress}%`}
-                    {latest.status === "done" && "Done."}
-                    {latest.status === "failed" && "Failed — check the worker logs."}
+                    {latest.status === "queued" && "Queued — building your timetable."}
+                    {latest.status === "running" && "Building your timetable. This can take a few minutes."}
+                    {latest.status === "done" && latest.quality_score != null && `Done. Quality score ${latest.quality_score}.`}
+                    {latest.status === "done" && latest.quality_score == null && "Done."}
+                    {latest.status === "failed" && "A full timetable is not possible with the current inputs. See the reasons below."}
                   </div>
                   {latest.conflict_report && latest.conflict_report.length > 0 && (
                     <div className="mt-3 border-t border-cardline pt-3">

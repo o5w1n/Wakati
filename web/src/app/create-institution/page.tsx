@@ -51,11 +51,11 @@ export default function CreateInstitution() {
     initial
   );
 
-  const titles = ["Create Institution", "Institution Admin", "Confirm Details"];
+  const titles = ["Tell us about your institution", "Who will run Wakati for this institution?", "Check the details"];
   const subs = [
-    "Tell us about your institution.",
-    "Who runs timetabling?",
-    "Check everything looks right.",
+    "Step 1 of 3 — Institution.",
+    "This person becomes the institution’s first administrator. You can add more later.",
+    "Summary of the institution and administrator before you create it.",
   ];
 
   return (
@@ -80,10 +80,10 @@ export default function CreateInstitution() {
               <Field label="Institution Name">
                 <input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Academic City University" className={inputCls} />
               </Field>
-              <Field label="Short Code">
+              <Field label="Short code" hint="Used in links and reports. Letters and numbers only.">
                 <input value={shortCode} onChange={(e) => setShortCode(e.target.value)} required placeholder="ACity" className={inputCls} maxLength={8} />
               </Field>
-              <Field label="Domain (optional)">
+              <Field label="Domain (optional)" hint="Lets staff and students with this email domain find your institution.">
                 <input value={domain} onChange={(e) => setDomain(e.target.value)} placeholder="acity.edu.gh" className={inputCls} />
               </Field>
             </div>
@@ -91,11 +91,17 @@ export default function CreateInstitution() {
 
           {step === 2 && (
             <div className="space-y-4">
-              <Field label="Your name" hint="You become this institution's timetable admin.">
+              <Field label="Full name">
                 <input value={adminName} onChange={(e) => setAdminName(e.target.value)} required placeholder="Registry Admin" className={inputCls} />
               </Field>
+              <Field label="Work email">
+                <input type="email" required placeholder="you@acity.edu.gh" className={inputCls} />
+              </Field>
+              <Field label="Job title">
+                <input placeholder="Timetable officer" className={inputCls} />
+              </Field>
               <p className="rounded-xl border border-cardline bg-card p-4 text-[13px] leading-relaxed text-body">
-                You&apos;ll sign in with your existing Wakati account. If you don&apos;t have one yet,{" "}
+                You’ll sign in with your existing Wakati account. If you don’t have one yet,{" "}
                 <Link href="/signup" className="font-medium text-primary hover:underline">create it first</Link>{" "}
                 — then come back here to register <strong className="text-heading">{name || "your institution"}</strong>.
               </p>
@@ -108,7 +114,7 @@ export default function CreateInstitution() {
                 ["Institution", name || "–"],
                 ["Short code", shortCode || "–"],
                 ["Domain", domain || "–"],
-                ["Admin", adminName || "–"],
+                ["Administrator", adminName || "–"],
               ].map(([k, v]) => (
                 <div key={k} className="flex items-center justify-between border-b border-cardline px-4 py-3 last:border-0">
                   <dt className="text-body">{k}</dt>
@@ -141,7 +147,7 @@ export default function CreateInstitution() {
               </button>
             ) : (
               <button type="submit" disabled={pending || !adminName.trim()} className={btnPrimaryCls}>
-                {pending ? "Creating…" : <>Create institution <ArrowRight size={15} aria-hidden /></>}
+                {pending ? "Creating…" : <>Create institution<ArrowRight size={15} aria-hidden /></>}
               </button>
             )}
           </div>

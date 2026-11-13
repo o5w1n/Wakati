@@ -80,7 +80,7 @@ export default async function LecturerHome() {
   return (
     <Shell role="lecturer" active="/lecturer">
       <h1 className="text-[26px] font-bold tracking-tight text-heading">Hello, {firstName}!</h1>
-      <p className="mt-1 text-[13px] text-body">Here&apos;s your next class.</p>
+      <p className="mt-1 text-[13px] text-body">Here’s your next class.</p>
 
       <section className="mt-5 rounded-xl border border-cardline bg-card p-5 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
         <div className="flex items-center justify-between gap-3">

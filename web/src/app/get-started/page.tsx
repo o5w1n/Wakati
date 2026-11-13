@@ -6,14 +6,14 @@ const CARDS = [
   {
     href: "/create-institution",
     icon: Building2,
-    title: "Create Institution",
-    body: "Set up your institution on Wakati.",
+    title: "Create an institution",
+    body: "Set up your university and become its administrator.",
   },
   {
     href: "/signup/request",
     icon: Users,
-    title: "Find / Join Institution",
-    body: "Request to join an existing institution.",
+    title: "Join an institution",
+    body: "Request access to a university already on Wakati.",
   },
 ];
 

@@ -29,6 +29,7 @@ export function RoomFinderClient({ rooms, taken }: { rooms: FinderRoom[]; taken:
           <ArrowLeft size={18} />
         </Link>
         <h1 className="text-[17px] font-bold text-heading">Room Finder</h1>
+        <span className="sr-only">Rooms are shown as free per the timetable; they cannot be booked here.</span>
       </div>
 
       <div className="mt-4 flex flex-wrap items-end gap-2">
@@ -58,7 +59,7 @@ export function RoomFinderClient({ rooms, taken }: { rooms: FinderRoom[]; taken:
           <h2 className="mt-6 text-[15px] font-bold text-heading">Available Rooms ({list.length})</h2>
           {list.length === 0 ? (
             <p className="mt-3 rounded-xl border border-dashed border-cardline bg-card p-6 text-center text-[13px] text-muted">
-              Nothing free in this slot — try another period.
+              No rooms are free at this time. Try another period.
             </p>
           ) : (
             <ul className="mt-3 divide-y divide-cardline rounded-xl border border-cardline bg-card">
@@ -71,7 +72,7 @@ export function RoomFinderClient({ rooms, taken }: { rooms: FinderRoom[]; taken:
               ))}
             </ul>
           )}
-          <p className="mt-3 text-xs text-muted">Rooms are shown as free per the timetable; they cannot be booked here.</p>
+          <p className="mt-3 text-xs text-muted">These rooms are free on the timetable. They are not reserved, so another group may still use one.</p>
           <Pill tone="neutral">
             {day} · {period}
           </Pill>

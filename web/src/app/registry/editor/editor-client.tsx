@@ -34,6 +34,13 @@ export function EditorClient({ versionId, placements: initial, days, periodLabel
   const [showPractical, setShowPractical] = useState(true);
   const [showGroups, setShowGroups] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [savedTick, setSavedTick] = useState(false);
+  const [overrideOpen, setOverrideOpen] = useState(false);
+  const [overrideReason, setOverrideReason] = useState("");
+  function flashSaved() {
+    setSavedTick(true);
+    window.setTimeout(() => setSavedTick(false), 2000);
+  }
 
   const periodIndexes = useMemo(() => {
     const per = new Map<number, number[]>();
@@ -63,7 +70,7 @@ export function EditorClient({ versionId, placements: initial, days, periodLabel
       let reason = "";
       if (p.expected > p.roomCap) {
         status = "bad";
-        reason = `${p.sessionKey} needs ${p.expected} seats but ${p.roomCode} seats ${p.roomCap}.`;
+        reason = `${p.roomCode} is taken by ${p.sessionKey} at this time.`;
       } else {
         for (let j = 0; j < p.length; j++) {
           const others = (occ.get(`${p.day}:${p.startPeriod + j}`) ?? []).filter((o) => o.id !== p.id);
@@ -76,7 +83,7 @@ export function EditorClient({ versionId, placements: initial, days, periodLabel
           const lecClash = p.lecturer !== "TBA" && others.find((o) => o.lecturer === p.lecturer);
           if (lecClash) {
             status = "bad";
-            reason = `${p.lecturer} teaches ${lecClash.sessionKey} at the same time.`;
+            reason = `${p.lecturer} teaches ${lecClash.sessionKey} at this time.`;
             break;
           }
         }
@@ -160,12 +167,13 @@ export function EditorClient({ versionId, placements: initial, days, periodLabel
             className="h-9 w-44 rounded-lg border border-cardline bg-card py-2 pl-8 pr-2.5 text-[13px] text-heading outline-none placeholder:text-muted focus:border-primary" />
         </div>
         <div className="ml-auto flex items-center gap-2">
-          {saving && <span className="text-xs text-muted">Saving…</span>}
+          {saving && <span className="text-xs text-muted" role="status">Saving…</span>}
+          {savedTick && <span className="text-xs font-medium text-ok-text" role="status">Saved.</span>}
           {badCount > 0 && <Pill tone="bad">{badCount} clash{badCount === 1 ? "" : "es"}</Pill>}
           <button onClick={toggleSelectedLock} className={`${btnSecondaryCls} !h-9 !border-cardline !text-heading`} disabled={!selected}>
             <Lock size={14} aria-hidden /> Lock
           </button>
-          <button className={`${btnPrimaryCls} !h-9`} onClick={() => setSaving(false)}>Save</button>
+          <button className={`${btnPrimaryCls} !h-9`} disabled={badCount > 0 && !overrideOpen} title={badCount > 0 ? "This move breaks a rule, so it cannot be saved. You can override it, but you will need to give a reason." : undefined} onClick={() => { if (badCount > 0) setOverrideOpen(true); else flashSaved(); }}>Save</button>
         </div>
       </div>
 
@@ -243,7 +251,7 @@ export function EditorClient({ versionId, placements: initial, days, periodLabel
                             <TimetableCell session={gs} status={st} reason={reasons[p.id]} selected={selectedId === p.id} onClick={() => setSelectedId(p.id)} />
                           </div>
                           {hov && (
-                            <ClashPopover tone={st === "bad" ? "bad" : "warn"} title={st === "bad" ? "Hard clash" : "Preference"} reason={reasons[p.id] ?? ""} />
+                            <ClashPopover tone={st === "bad" ? "bad" : "warn"} title={st === "bad" ? "Hard clash" : "Fits, but check"} reason={reasons[p.id] ?? ""} />
                           )}
                         </td>
                       );
@@ -256,6 +264,45 @@ export function EditorClient({ versionId, placements: initial, days, periodLabel
           <p className="mt-2 hidden text-xs text-muted lg:block">{DAY_FULL[days[0]]}–{DAY_FULL[days[days.length - 1]]} · {range} · drag a block to move it, hover a red cell for the reason.</p>
         </div>
       </div>
+      {overrideOpen && selected && (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={() => setOverrideOpen(false)}>
+          <div className="w-full max-w-md rounded-xl border border-cardline bg-card p-6" onClick={(e) => e.stopPropagation()}>
+            <h2 className="text-base font-bold text-heading">Override a rule</h2>
+            <p className="mt-1 text-[13px] text-body">This move breaks a rule: {reasons[selected.id]}. You can override it, but you will need to give a reason.</p>
+            <label className="mt-4 block text-[13px] font-medium text-heading" htmlFor="override-reason">
+              Reason for overriding (required)
+            </label>
+            <textarea
+              id="override-reason"
+              value={overrideReason}
+              onChange={(e) => setOverrideReason(e.target.value)}
+              rows={3}
+              className="mt-1.5 w-full rounded-lg border border-cardline bg-card px-3 py-2 text-[13px] text-heading outline-none focus:border-primary"
+              placeholder="e.g. LT2 projector fixed after week 3"
+            />
+            <p className="mt-1 text-xs text-muted">This is saved in the change log.</p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button className={`${btnSecondaryCls} !border-cardline !text-heading`} onClick={() => setOverrideOpen(false)}>Cancel</button>
+              <button
+                className={btnPrimaryCls}
+                disabled={!overrideReason.trim()}
+                onClick={async () => {
+                  const p = items.find((i) => i.id === selected.id);
+                  if (p) {
+                    await logChange(versionId, `override: ${overrideReason.trim()}`, p, p);
+                    setItems((prev) => prev.map((i) => (i.id === p.id ? { ...i, overrideReason: overrideReason.trim() } : i)));
+                  }
+                  setOverrideOpen(false);
+                  setOverrideReason("");
+                  flashSaved();
+                }}
+              >
+                Override and save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

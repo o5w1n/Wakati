@@ -130,7 +130,7 @@ export default async function EditorPage() {
       {vers.length > 1 && (
         <p className="mt-3 text-xs text-muted">
           Other versions: {vers.slice(1).map((v) => `${v.status} (${new Date(v.created_at).toLocaleDateString()})`).join(" · ")}
-          {" — "}compare and restore from Review &amp; Publish.
+          {" — "}compare and restore from Review & Publish.
         </p>
       )}
       {draft && <StatusBadge tone="warn">Unplaced sessions never publish silently</StatusBadge>}

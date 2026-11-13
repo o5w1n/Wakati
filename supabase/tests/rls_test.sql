@@ -1,16 +1,19 @@
 -- pgTAP RLS tests. Run AFTER enabling pgTAP, BEFORE loading real student data (Phase 1 gate).
 -- Covers: tenant isolation on every table, one-published-per-semester, lecturer own-availability.
 -- Solver uses service_role (bypasses RLS) — not tested here; its explicit filtering is covered by pytest.
-begin; select plan(8);
+begin; select plan(7);
 
--- fixtures: two universities
-insert into public.universities (id, name, short_code)
-values ('11111111-1111-1111-1111-111111111111','Uni A','UA'),
-       ('22222222-2222-2222-2222-222222222222','Uni B','UB');
+-- fixtures: two universities (active, so the directory policy lists them)
+insert into public.universities (id, name, short_code, status)
+values ('11111111-1111-1111-1111-111111111111','Uni A','UA','active'),
+       ('22222222-2222-2222-2222-222222222222','Uni B','UB','active');
 
 insert into public.lecturers (university_id, name, email, department)
 values ('11111111-1111-1111-1111-111111111111','A Lecturer','a@ua.edu','CS'),
        ('22222222-2222-2222-2222-222222222222','B Lecturer','b@ub.edu','CS');
+
+-- RLS is bypassed for table owners, so drop to the app role before asserting.
+set local role authenticated;
 
 -- helper: fake JWT as Uni A timetable_admin
 select set_config('request.jwt.claims', '{"university_id":"11111111-1111-1111-1111-111111111111","app_role":"timetable_admin"}', true);
@@ -56,4 +59,4 @@ select results_eq(
   'anonymous sees nothing'
 );
 
-select * from finish(); rollback;
+select * from finish(); rollback; reset role;
