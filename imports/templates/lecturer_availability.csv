@@ -1,0 +1,4 @@
+lecturer_email,day_of_week,period_index,status,reason
+a.mensah@example.edu,5,1,unavailable,External teaching
+a.mensah@example.edu,5,2,unavailable,External teaching
+k.yamak@example.edu,1,1,preferred,

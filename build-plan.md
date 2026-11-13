@@ -14,12 +14,13 @@ Core idea: set up lecturers, courses, groups and rooms once. Every new semester 
 
 | Area | Before | Now |
 | --- | --- | --- |
-| Universities | Multi-university from v1 | Academic City only. Keep a `university_id` column on every table, build nothing else for multi-tenancy |
+| Institutions | Multi-university from v1 | Open registration from v0: `register_university()` RPC + invites/join-requests, RLS-isolated tenants |
+| Time grid | Academic City 9-period constant | Fully per-semester: `periods` table, `seed_periods()` builder, `periods.csv` import |
 | Exams | Phase 5 of v1 | Later, not committed |
 | Daily operations | Cancellations and emergency rooms in v1 | Later, not committed |
 | Stack | React/Vite, NestJS, TypeORM, pg-boss, custom auth | Next.js, Supabase (auth, Postgres with RLS, realtime), Python FastAPI with OR-Tools CP-SAT |
 | First version | Full platform | "Version zero": schema, import, solver on real data, plain pages |
-| Login | Own login, SSO later | Supabase Auth behind an identity adapter; portal SSO if the portal offers it |
+| Login | Own login, SSO later | Supabase Auth: register institution / invite token / request-to-join + approval; portal SSO adapter later |
 | Rules | In code | Weights and toggles in the database; the solver is the single source of truth |
 | Success test | Phase gates only | Gates plus a kill criterion (section 6) |
 
@@ -76,7 +77,8 @@ Rules for the design:
 - **The solver uses elevated access and bypasses RLS.** Every query it makes filters explicitly, and tests cover it.
 - **One source of truth for rules.** The Python solver is authoritative. The TypeScript checker used for instant slot colouring is verified against it on a shared test set, so the two cannot drift silently.
 - **Token claims go stale** until refresh. Decide how fast a role change or a removed account must take effect.
-- **Identity behind an adapter.** Version zero uses Supabase Auth with accounts created from imports. If the portal offers SAML or OIDC, plug it in without touching the rest.
+- **Identity behind an adapter.** Signup is closed-loop: `register_university()` for new institutions; invite token (`accept_invite`) or directory + `request_join`/`review_join_request` for members. If a portal offers SAML or OIDC, plug it in without touching the rest.
+- **Grids are per-semester configuration.** `periods` table + `seed_periods()` + `periods.csv`; the solver, checker, and editor all read the grid — nothing assumes Mon–Fri 9 periods.
 - **Rules and weights are configuration** per semester, read by the solver.
 - **Published timetables are read-heavy.** Start with plain Next.js pages. Add per-cohort snapshots on a CDN only if a load test at semester-start levels shows a need.
 

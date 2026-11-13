@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+@theme {
+  /* Wakati tokens — monochrome first, indigo accent */
+  --color-ink: #111111;
+  --color-paper: #ffffff;
+  --color-canvas: #f7f7f5;
+  --color-canvas-2: #f1f1ef;
+  --color-line: #e5e5e3;
+  --color-muted: #777777;
+  --color-body: #171717;
+  --color-indigo-deep: #4338ca;
+  --color-indigo-hover: #3730a3;
+  --color-ok-bg: #dcfce7;
+  --color-ok-text: #166534;
+  --color-warn-bg: #fef3c7;
+  --color-warn-text: #92400e;
+  --color-bad-bg: #fee2e2;
+  --color-bad-text: #991b1b;
+
+  --font-sans: "Inter", "Geist", system-ui, -apple-system, sans-serif;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-body);
+  font-size: 14px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* timetable grid scrollbars */
+.tt-scroll::-webkit-scrollbar {
+  height: 8px;
+  width: 8px;
+}
+.tt-scroll::-webkit-scrollbar-thumb {
+  background: var(--color-line);
+  border-radius: 4px;
+}

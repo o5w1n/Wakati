@@ -1,0 +1,5 @@
+session_key,component,length_periods,times_per_week,required_room_type,lecturer_email,group_label,expected_students
+CS302-T1,theory,2,1,lecture,a.mensah@example.edu,,95
+CS4135-T1,theory,2,1,lecture,k.yamak@example.edu,,80
+ML401-T1,theory,2,1,lecture,e.adjunct@example.edu,,30
+CRY402-T1,theory,2,1,lecture,,Group A,28

@@ -1,0 +1,5 @@
+code,title,department,level,is_elective
+CS302,Algorithms,Computer Science,300,false
+CS4135,Computer Security,Computer Science,400,false
+ML401,Machine Learning,Computer Science,400,true
+CRY402,Cryptography,Computer Science,400,true
