@@ -26,6 +26,15 @@ export async function signUp(form: FormData) {
   redirect("/signup/pending");
 }
 
+export async function requestPasswordReset(form: FormData) {
+  const sb = await supabaseServer();
+  const email = String(form.get("email") ?? "").trim();
+  if (!email) return { error: "Enter your email." };
+  const { error } = await sb.auth.resetPasswordForEmail(email);
+  if (error) return { error: error.message };
+  return { sent: true as const };
+}
+
 export async function signOut() {
   const sb = await supabaseServer();
   await sb.auth.signOut();

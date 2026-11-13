@@ -1,5 +1,5 @@
 import { Shell } from "@/components/shell";
-import { PageHeader, Field } from "@/components/ui";
+import { PageHeader, Field, StatusBadge } from "@/components/ui";
 import { inputCls, btnPrimaryCls } from "@/components/ui";
 
 export default function PlatformSettings() {
@@ -8,7 +8,9 @@ export default function PlatformSettings() {
       <PageHeader title="Platform Settings" sub="Defaults for new institutions. Tenants can override their own grid and rules." />
       <div className="grid max-w-2xl gap-3">
         <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Registration</div>
+          <div className="mb-4 flex items-center gap-2 text-sm font-medium text-ink">
+            Registration <StatusBadge tone="neutral">manual for now</StatusBadge>
+          </div>
           <div className="space-y-3">
             <Field label="New institutions start as" hint="Pending requires your approval; Active skips it.">
               <select className={inputCls} defaultValue="pending">
@@ -26,7 +28,9 @@ export default function PlatformSettings() {
           </div>
         </section>
         <section className="border border-line bg-paper p-4">
-          <div className="mb-4 text-sm font-medium text-ink">Solver defaults</div>
+          <div className="mb-4 flex items-center gap-2 text-sm font-medium text-ink">
+            Solver defaults <StatusBadge tone="neutral">manual for now</StatusBadge>
+          </div>
           <div className="space-y-3">
             <Field label="Max solve time per job (seconds)">
               <input type="number" defaultValue={300} className={inputCls} />
@@ -38,6 +42,7 @@ export default function PlatformSettings() {
         </section>
         <div>
           <button className={btnPrimaryCls}>Save platform settings</button>
+          <p className="mt-2 text-xs text-muted">Persisted platform config (service-role settings table) is still to come — values above are not saved yet.</p>
         </div>
       </div>
     </Shell>

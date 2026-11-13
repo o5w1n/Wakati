@@ -1,17 +1,7 @@
-import { ProfileSettings } from "@/components/profilesettings";
-import { Field } from "@/components/ui";
-import { inputCls } from "@/components/ui";
+import { ProfileSettingsLive } from "@/components/profilesettings";
 
-export default function LecturerSettings() {
-  return (
-    <ProfileSettings
-      role="lecturer" active="/lecturer/settings"
-      name="Dr. A. Mensah" email="mensah@acity.edu.gh"
-      extra={
-        <Field label="Display name on timetables" hint="Shown in the lecturer line of each cell.">
-          <input defaultValue="Dr. Mensah" className={inputCls} />
-        </Field>
-      }
-    />
-  );
+export const instant = false;
+
+export default async function LecturerSettings() {
+  return <ProfileSettingsLive role="lecturer" active="/lecturer/settings" path="/lecturer/settings" />;
 }

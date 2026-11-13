@@ -1,31 +1,55 @@
-"use client";
-
+import { connection } from "next/server";
 import { Shell } from "@/components/shell";
-import { PageHeader } from "@/components/ui";
-import { DataTable } from "@/components/datatable";
+import { PageHeader, StatusBadge } from "@/components/ui";
+import { supabaseServer } from "@/lib/supabase-server";
 
-const ROWS = [
-  { id: "1", when: "13 Nov 09:41", actor: "platform admin", tenant: "VVU", action: "Suspended institution", reason: "Unpaid invoice Q3" },
-  { id: "2", when: "12 Nov 16:02", actor: "platform admin", tenant: "AC", action: "Reassigned admin → registry@acity.edu.gh", reason: "Staff change" },
-  { id: "3", when: "9 Nov 11:20", actor: "system", tenant: "HTU", action: "Institution registered (pending)", reason: "Self-service signup" },
-  { id: "4", when: "28 Oct 14:55", actor: "platform admin", tenant: "ASH", action: "Approved & activated", reason: "Documents verified" },
-];
+export const instant = false;
 
-export default function PlatformAudit() {
+export default async function PlatformAudit() {
+  await connection();
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) {
+    return (
+      <Shell role="superadmin" active="/admin/audit">
+        <PageHeader title="Audit Log" sub="Sign in to view." />
+      </Shell>
+    );
+  }
+  // platform view: status changes = universities.updated; show current statuses + join-request decisions
+  const { data: unis } = await sb.from("universities").select("id,name,short_code,status,created_at").order("created_at", { ascending: false });
+  const list = (unis ?? []) as { id: string; name: string; short_code: string; status: string; created_at: string }[];
+
   return (
     <Shell role="superadmin" active="/admin/audit">
       <PageHeader title="Audit Log" sub="Platform-level actions. Tenant timetabling changes live in each institution's own log." />
-      <DataTable
-        rows={ROWS}
-        searchPlaceholder="Search actor, tenant, action…"
-        columns={[
-          { key: "when", header: "When", render: (r) => <span className="whitespace-nowrap text-muted">{r.when}</span> },
-          { key: "actor", header: "Actor", render: (r) => r.actor },
-          { key: "tenant", header: "Institution", render: (r) => <span className="font-mono text-xs">{r.tenant}</span> },
-          { key: "action", header: "Action", render: (r) => r.action },
-          { key: "reason", header: "Reason", render: (r) => <span className="text-muted">{r.reason}</span> },
-        ]}
-      />
+      {list.length === 0 ? (
+        <p className="border border-dashed border-line bg-paper p-6 text-center text-[13px] text-muted">No institutions yet.</p>
+      ) : (
+        <table className="w-full border border-line bg-paper text-[13px]">
+          <thead>
+            <tr className="border-b border-line bg-canvas-2 text-left text-muted">
+              <th className="px-3 py-2 font-medium">Registered</th>
+              <th className="px-3 py-2 font-medium">Institution</th>
+              <th className="px-3 py-2 font-medium">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((u) => (
+              <tr key={u.id} className="border-b border-line last:border-0">
+                <td className="whitespace-nowrap px-3 py-2 text-muted">{new Date(u.created_at).toLocaleString()}</td>
+                <td className="px-3 py-2">{u.name} <span className="font-mono text-xs text-muted">{u.short_code}</span></td>
+                <td className="px-3 py-2">
+                  <StatusBadge tone={u.status === "active" ? "ok" : u.status === "pending" ? "warn" : "bad"}>{u.status}</StatusBadge>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      <p className="mt-2 text-xs text-muted">Full per-action platform trail (approvals, suspensions) ships with the service-role audit writer.</p>
     </Shell>
   );
 }
