@@ -1,50 +1,61 @@
-"use client";
-
-import { useState } from "react";
+import { connection } from "next/server";
 import Link from "next/link";
 import { Shell } from "@/components/shell";
-import { PageHeader, StatusBadge, Field } from "@/components/ui";
-import { btnPrimaryCls, btnSecondaryCls, inputCls } from "@/components/ui";
-import { TimetableGrid, SAMPLE_DAYS, SAMPLE_PERIODS, type SlotStatus } from "@/components/timetable";
+import { PageHeader, StatusBadge } from "@/components/ui";
+import { btnPrimaryCls, btnSecondaryCls } from "@/components/ui";
+import { supabaseServer } from "@/lib/supabase-server";
+import { setVersionStatus, publishVersion } from "@/app/actions/publish";
 
-const V8_STATUSES: Record<string, SlotStatus> = { s1: "ok", s2: "ok", s3: "warn", s4: "ok" };
-const V8_REASONS: Record<string, string> = {
-  s3: "Soft preference: last period of the day, outside preferred window (P1, −15).",
-};
+export const instant = false;
 
-const VERSIONS = [
-  { v: "v8 (draft)", when: "13 Nov 09:12", by: "Registry Admin", score: "96", hard: "1", status: "Draft" },
-  { v: "v7", when: "10 Nov 17:40", by: "Registry Admin", score: "100", hard: "0", status: "Published" },
-  { v: "v6", when: "7 Nov 15:02", by: "Registry Admin", score: "91", hard: "0", status: "Archived" },
-];
-
-export default function Publish() {
-  const [phase, setPhase] = useState<"draft" | "review" | "published">("draft");
-  const [overrideOpen, setOverrideOpen] = useState(false);
-  const [accepted, setAccepted] = useState(false);
+export default async function Publish() {
+  await connection();
+  const sb = await supabaseServer();
+  const { data: semesters } = await sb.from("semesters").select("id,name").order("created_at", { ascending: false });
+  const sems = (semesters ?? []) as { id: string; name: string }[];
+  const active = sems[0];
+  if (!active) {
+    return (
+      <Shell role="registry" active="/registry/publish">
+        <PageHeader title="Review & Publish" sub="No semester yet." />
+      </Shell>
+    );
+  }
+  const { data: versions } = await sb
+    .from("timetable_versions")
+    .select("id,status,quality_score,created_at,notes")
+    .eq("semester_id", active.id)
+    .order("created_at", { ascending: false });
+  const vers = (versions ?? []) as { id: string; status: string; quality_score: number | null; created_at: string; notes: string | null }[];
+  const current = vers[0];
 
   return (
     <Shell role="registry" active="/registry/publish">
       <PageHeader
         title="Review & Publish"
-        sub="Semester 1 2026/27 · BSc programmes"
+        sub={`${active.name}${current ? ` · ${current.status} · score ${current.quality_score ?? "—"}` : ""}`}
         actions={
-          phase === "draft" ? (
-            <button className={btnPrimaryCls} onClick={() => setPhase("review")}>Submit for review →</button>
-          ) : phase === "review" ? (
+          current?.status === "draft" ? (
+            <form action={async () => { await setVersionStatus(current.id, "review"); }}>
+              <button className={btnPrimaryCls}>Submit for review →</button>
+            </form>
+          ) : current?.status === "review" ? (
             <>
-              <button className={btnSecondaryCls} onClick={() => setPhase("draft")}>Back to draft</button>
+              <form action={async () => { await setVersionStatus(current.id, "draft"); }}>
+                <button className={btnSecondaryCls}>Back to draft</button>
+              </form>
               <Link href="/registry/editor" className={btnSecondaryCls}>Open in editor</Link>
-              <button className={btnPrimaryCls} onClick={() => setPhase("published")}>Publish v8</button>
+              <form action={async () => { await publishVersion(current.id, active.id); }}>
+                <button className={btnPrimaryCls}>Publish</button>
+              </form>
             </>
-          ) : null
+          ) : undefined
         }
       />
 
-      {/* Stepper */}
       <ol className="mb-6 flex items-center gap-0 text-[13px]">
         {(["Draft", "Under review", "Published"] as const).map((s, i) => {
-          const idx = phase === "draft" ? 0 : phase === "review" ? 1 : 2;
+          const idx = !current || current.status === "draft" ? 0 : current.status === "review" ? 1 : 2;
           const done = i < idx, now = i === idx;
           return (
             <li key={s} className="flex items-center">
@@ -58,67 +69,29 @@ export default function Publish() {
         })}
       </ol>
 
-      {phase === "published" && (
+      {current?.status === "published" && (
         <div className="mb-4 border border-line border-l-4 border-l-indigo-deep bg-paper p-4 text-[13px]">
-          <span className="font-medium">v8 is live.</span> Lecturers and 1,170 students can now see their
-          personal timetables. Previous version v7 is archived and restorable.
+          <span className="font-medium">Published.</span> Lecturers and students can now see their
+          personal timetables. Previous versions are archived and restorable.
         </div>
       )}
 
-      <div className="grid gap-3 lg:grid-cols-3">
-        <section className="border border-line bg-paper p-4 lg:col-span-2">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="text-sm font-medium text-ink">Version comparison — v8 draft vs v7 published</div>
-            <StatusBadge tone="ok">−0 hard clashes</StatusBadge>
-          </div>
-          <TimetableGrid days={SAMPLE_DAYS} periods={SAMPLE_PERIODS} statuses={V8_STATUSES} reasons={V8_REASONS} />
-          <div className="mt-3 grid gap-2 text-[13px] sm:grid-cols-3">
-            <div className="border border-line p-3"><div className="font-medium">12 sessions moved</div><div className="text-muted">vs v7, mostly Lab-A reshuffle</div></div>
-            <div className="border border-line p-3"><div className="font-medium">Score 96 → 100</div><div className="text-muted">soft-penalty sum fell</div></div>
-            <div className="border border-line p-3">
-              <div className="font-medium">1 soft preference left</div>
-              <div className="text-muted">ML401 last-period slot</div>
-              <button className="mt-1 text-indigo-deep hover:underline" onClick={() => setOverrideOpen(true)}>Override with reason…</button>
-            </div>
-          </div>
-        </section>
-
-        <section className="border border-line bg-paper p-4">
-          <div className="mb-3 text-sm font-medium text-ink">Version history</div>
-          {VERSIONS.map((v) => (
-            <div key={v.v} className="border-b border-line py-2.5 text-[13px] last:border-0">
+      <section className="border border-line bg-paper p-4">
+        <div className="mb-3 text-sm font-medium text-ink">Version history</div>
+        {vers.length === 0 ? (
+          <p className="text-[13px] text-muted">No versions yet. Generate a draft from the Generate page.</p>
+        ) : (
+          vers.map((v) => (
+            <div key={v.id} className="border-b border-line py-2.5 text-[13px] last:border-0">
               <div className="flex items-center justify-between">
-                <span className="font-medium text-ink">{v.v}</span>
-                <StatusBadge tone={v.status === "Published" ? "ok" : v.status === "Draft" ? "warn" : "neutral"}>{v.status}</StatusBadge>
+                <span className="font-medium text-ink">{new Date(v.created_at).toLocaleString()}</span>
+                <StatusBadge tone={v.status === "published" ? "ok" : v.status === "draft" ? "warn" : "neutral"}>{v.status}</StatusBadge>
               </div>
-              <div className="mt-0.5 text-muted">{v.when} · {v.by} · score {v.score} · {v.hard} hard</div>
+              <div className="mt-0.5 text-muted">score {v.quality_score ?? "—"}{v.notes ? ` · ${v.notes}` : ""}</div>
             </div>
-          ))}
-        </section>
-      </div>
-
-      {overrideOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-ink/40 p-4">
-          <div className="w-full max-w-md border border-line bg-paper p-5">
-            <div className="mb-1 text-sm font-medium text-ink">Override with reason</div>
-            <p className="mb-4 text-[13px] text-muted">
-              Overrides are for soft preferences only — hard clashes can never be overridden into a published
-              version. The reason is stored on the placement and shown to anyone who hovers the slot.
-            </p>
-            <Field label="Reason (required)">
-              <input placeholder="e.g. Lab-A only free at last period on Wednesdays…" className={inputCls} />
-            </Field>
-            <label className="mt-3 flex items-start gap-2 text-[13px]">
-              <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} className="mt-0.5" />
-              I accept responsibility for publishing this soft preference, logged under my name.
-            </label>
-            <div className="mt-4 flex justify-end gap-2">
-              <button className={btnSecondaryCls} onClick={() => setOverrideOpen(false)}>Cancel</button>
-              <button className={btnPrimaryCls} disabled={!accepted} onClick={() => setOverrideOpen(false)}>Log override</button>
-            </div>
-          </div>
-        </div>
-      )}
+          ))
+        )}
+      </section>
     </Shell>
   );
 }

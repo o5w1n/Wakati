@@ -1,105 +1,61 @@
-"use client";
-
-import { useState } from "react";
+import { connection } from "next/server";
 import { Shell } from "@/components/shell";
-import { PageHeader } from "@/components/ui";
-import { btnPrimaryCls } from "@/components/ui";
-import { SAMPLE_PERIODS } from "@/components/timetable";
-import { cn } from "@/lib/cn";
+import { PageHeader, EmptyState } from "@/components/ui";
+import { supabaseServer } from "@/lib/supabase-server";
+import { AvailabilityForm } from "./form";
 
-type Cell = "available" | "preferred" | "unavailable";
-const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri"];
+export const instant = false;
 
-const cellCls: Record<Cell, string> = {
-  available: "bg-paper hover:bg-canvas",
-  preferred: "bg-indigo-deep/10 hover:bg-indigo-deep/20",
-  unavailable: "bg-ink text-white hover:bg-body",
-};
+export default async function LecturerAvailability() {
+  await connection();
+  const sb = await supabaseServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) {
+    return (
+      <Shell role="lecturer" active="/lecturer/availability">
+        <PageHeader title="Availability" sub="Sign in first." />
+      </Shell>
+    );
+  }
+  const { data: profile } = await sb.from("profiles").select("university_id,lecturer_id").eq("id", user.id).single();
+  const prof = profile as { university_id: string; lecturer_id: string | null } | null;
+  if (!prof?.lecturer_id) {
+    return (
+      <Shell role="lecturer" active="/lecturer/availability">
+        <PageHeader title="Availability" sub="No lecturer record linked." />
+        <EmptyState title="Not linked" sub="Ask the Registry to link your account to your lecturer record." />
+      </Shell>
+    );
+  }
+  const { data: sems } = await sb.from("semesters").select("id,name").eq("university_id", prof.university_id).order("created_at", { ascending: false });
+  const sems2 = (sems ?? []) as { id: string; name: string }[];
+  const active = sems2.find((s) => true) ?? sems2[0];
+  if (!active) {
+    return (
+      <Shell role="lecturer" active="/lecturer/availability">
+        <PageHeader title="Availability" sub="No semester yet." />
+      </Shell>
+    );
+  }
+  const { data: periods } = await sb.from("periods").select("day_of_week,period_index").eq("semester_id", active.id).order("day_of_week").order("period_index");
+  const plist = (periods ?? []) as { day_of_week: number; period_index: number }[];
+  const days = [...new Set(plist.map((p) => p.day_of_week))].sort();
+  const maxP = Math.max(0, ...plist.map((p) => p.period_index));
+  const { data: existing } = await sb
+    .from("lecturer_availability")
+    .select("day_of_week,period_index,status")
+    .eq("semester_id", active.id)
+    .eq("lecturer_id", prof.lecturer_id);
+  const emap: Record<string, string> = {};
+  for (const e of ((existing ?? []) as { day_of_week: number; period_index: number; status: string }[])) {
+    emap[`${e.day_of_week}:${e.period_index}`] = e.status;
+  }
 
-export function AvailabilityGrid({ heading, sub }: { heading: string; sub: string }) {
-  const [grid, setGrid] = useState<Cell[][]>(
-    DAYS.map(() => SAMPLE_PERIODS.map(() => "available" as Cell))
-  );
-  const cycle = (d: number, p: number) => {
-    const order: Cell[] = ["available", "preferred", "unavailable"];
-    setGrid((g) => {
-      const next = g.map((row) => [...row]);
-      next[d][p] = order[(order.indexOf(g[d][p]) + 1) % 3];
-      return next;
-    });
-  };
-  const setDay = (d: number, v: Cell) =>
-    setGrid((g) => g.map((row, i) => (i === d ? row.map(() => v) : row)));
-
-  const counts = {
-    unavailable: grid.flat().filter((c) => c === "unavailable").length,
-    preferred: grid.flat().filter((c) => c === "preferred").length,
-  };
-
-  return (
-    <>
-      <PageHeader
-        title={heading}
-        sub={sub}
-        actions={<button className={btnPrimaryCls}>Submit availability</button>}
-      />
-      <div className="mb-3 flex flex-wrap items-center gap-3 text-xs text-muted">
-        <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 border border-line bg-paper" /> Available</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 bg-indigo-deep/20" /> Preferred</span>
-        <span className="flex items-center gap-1.5"><span className="inline-block h-3 w-3 bg-ink" /> Unavailable</span>
-        <span className="ml-auto">{counts.unavailable} unavailable · {counts.preferred} preferred</span>
-      </div>
-      <div className="tt-scroll overflow-auto border border-line bg-paper">
-        <table className="w-full min-w-[680px] border-collapse">
-          <thead>
-            <tr>
-              <th className="w-20 border-b border-line bg-canvas-2 px-2 py-2 text-left text-xs font-medium text-muted" />
-              {SAMPLE_PERIODS.map((p) => (
-                <th key={p.index} className="border-b border-l border-line bg-canvas-2 px-1 py-2 text-center text-[11px] font-medium text-muted">
-                  P{p.index}
-                </th>
-              ))}
-              <th className="w-40 border-b border-line bg-canvas-2 px-2 py-2 text-left text-xs font-medium text-muted">Quick actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {DAYS.map((day, d) => (
-              <tr key={day}>
-                <td className="border-b border-line bg-canvas-2 px-2 py-2 text-xs font-medium text-ink">{day}</td>
-                {SAMPLE_PERIODS.map((p, pi) => (
-                  <td key={p.index} className="border-b border-l border-line p-0">
-                    <button
-                      onClick={() => cycle(d, pi)}
-                      title={`${day} P${p.index} — ${grid[d][pi]}`}
-                      className={cn("block h-9 w-full text-[10px] font-medium transition-colors", cellCls[grid[d][pi]])}
-                    >
-                      {grid[d][pi] === "unavailable" ? "✕" : grid[d][pi] === "preferred" ? "★" : ""}
-                    </button>
-                  </td>
-                ))}
-                <td className="border-b border-line px-2 py-1">
-                  <div className="flex gap-1">
-                    <button onClick={() => setDay(d, "unavailable")} className="border border-line px-1.5 py-1 text-[11px] text-muted hover:text-ink">Day off</button>
-                    <button onClick={() => setDay(d, "available")} className="border border-line px-1.5 py-1 text-[11px] text-muted hover:text-ink">Clear</button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="mt-2 text-xs text-muted">Unavailable periods are a hard rule (H8); preferred feeds P1. Add a reason for multi-day blocks — visible to admins only.</p>
-    </>
-  );
-}
-
-export default function LecturerAvailability() {
   return (
     <Shell role="lecturer" active="/lecturer/availability">
-      <AvailabilityGrid
-        heading="Availability"
-        sub="2026/27 Semester 1 · deadline Fri 20 Nov — click a cell to cycle Available → Preferred → Unavailable"
-      />
+      <AvailabilityForm semesterId={active.id} semesterName={active.name} days={days} maxPeriod={maxP} initial={emap} />
     </Shell>
   );
 }
