@@ -1,10 +1,10 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: #3a2fc8;
-  --color-primary-hover: #2f27a8;
+  --color-primary: #C93834;
+  --color-primary-hover: #C93834;
   --color-sidebar: #141b34;
-  --color-sidebar-active: #3a2fc8;
+  --color-sidebar-active: #C93834;
   --color-page: #f6f7fd;
   --color-card: #ffffff;
   --color-cardline: #e6e8f2;
@@ -25,8 +25,8 @@
   --color-canvas: #f6f7fd;
   --color-canvas-2: #eef0f9;
   --color-line: #e6e8f2;
-  --color-indigo-deep: #3a2fc8;
-  --color-indigo-hover: #2f27a8;
+  --color-indigo-deep: #C93834;
+  --color-indigo-hover: #C93834;
 
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --radius-card: 12px;

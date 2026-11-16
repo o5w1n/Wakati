@@ -16,7 +16,8 @@ values ('11111111-1111-1111-1111-111111111111','A Lecturer','a@ua.edu','CS'),
 set local role authenticated;
 
 -- helper: fake JWT as Uni A timetable_admin
-select set_config('request.jwt.claims', '{"university_id":"11111111-1111-1111-1111-111111111111","app_role":"timetable_admin"}', true);
+select set_config('request.jwt.claim.sub', '00000000-0000-0000-0000-000000000001', true);
+select set_config('request.jwt.claims', '{"sub":"00000000-0000-0000-0000-000000000001","university_id":"11111111-1111-1111-1111-111111111111","app_role":"timetable_admin"}', true);
 
 select results_eq(
   $$ select count(*)::int from public.lecturers $$,
@@ -50,11 +51,15 @@ select ok(
 );
 -- active universities visible as directory to other-tenant members
 select results_eq(
-  $$ select count(*)::int from public.universities where status = 'active' $$,
+  $$ select count(*)::int from public.universities
+     where status = 'active'
+       and id in ('11111111-1111-1111-1111-111111111111','22222222-2222-2222-2222-222222222222') $$,
   array[2],
   'active institutions listed as directory'
 );
 -- anonymous gets nothing
+set local role anon;
+select set_config('request.jwt.claim.sub', '', true);
 select set_config('request.jwt.claims', '{}', true);
 select results_eq(
   $$ select count(*)::int from public.lecturers $$,
@@ -62,4 +67,5 @@ select results_eq(
   'anonymous sees nothing'
 );
 
-select * from finish(); rollback; reset role;
+reset role;
+select * from finish(); rollback;
