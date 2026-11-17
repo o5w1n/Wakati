@@ -113,8 +113,11 @@ export default async function Generate() {
             <div className="px-4 py-3">
               {latest ? (
                 <>
-                  <div className="h-1.5 w-full bg-page">
-                    <div className="h-1.5 bg-primary" style={{ width: `${latest.progress}%` }} />
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-page">
+                    <div
+                      className="h-1.5 w-full origin-left bg-primary transition-transform duration-300 ease-[var(--ease-out)]"
+                      style={{ transform: `scaleX(${Math.max(0, Math.min(100, latest.progress)) / 100})` }}
+                    />
                   </div>
                   <div className="mt-2 text-xs text-muted">
                     {latest.status === "queued" && "Queued — building your timetable."}

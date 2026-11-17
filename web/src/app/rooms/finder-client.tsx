@@ -23,7 +23,7 @@ export function RoomFinderClient({ rooms, taken }: { rooms: FinderRoom[]; taken:
   const list = (rooms.length > 0 ? rooms : SAMPLE).filter((r) => !taken.has(r.code));
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-2xl bg-page px-6 py-6">
+    <div className="mx-auto min-h-dvh w-full max-w-2xl bg-page px-6 py-6">
       <div className="flex items-center gap-2">
         <Link href="/student" aria-label="Back" className="text-heading transition-colors hover:text-primary">
           <ArrowLeft size={18} />

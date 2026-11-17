@@ -72,7 +72,7 @@ export function Shell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen bg-page">
+    <div className="flex min-h-dvh bg-page">
       <aside className="fixed inset-y-0 left-0 hidden w-[220px] flex-col bg-sidebar md:flex">
         <div className="flex h-16 items-center px-5">
           <Logo dark />
@@ -121,7 +121,7 @@ export function Shell({
         </header>
         <main className="flex-1 px-6 py-6 md:px-8">{children}</main>
         {/* mobile bottom nav */}
-        <nav aria-label="Mobile" className="sticky bottom-0 flex border-t border-cardline bg-card md:hidden">
+        <nav aria-label="Mobile" className="sticky bottom-0 flex border-t border-cardline bg-card pb-[env(safe-area-inset-bottom,0px)] md:hidden">
           {NAV[role].slice(0, 5).map((n) => {
             const Icon = n.icon;
             const on = n.href === active;

@@ -59,7 +59,7 @@ export default function CreateInstitution() {
   ];
 
   return (
-    <div className="min-h-screen bg-page">
+    <div className="min-h-dvh bg-page">
       <header className="mx-auto flex h-16 max-w-3xl items-center px-6">
         <Logo />
       </header>

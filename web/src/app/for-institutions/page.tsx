@@ -17,7 +17,7 @@ const GET = [
 
 export default function ForInstitutions() {
   return (
-    <div className="min-h-screen bg-page">
+    <div className="min-h-svh bg-page">
       <header className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <Logo />
         <nav className="hidden items-center gap-7 text-sm text-body md:flex" aria-label="Primary">
@@ -25,7 +25,7 @@ export default function ForInstitutions() {
           <Link href="/features" className="transition-colors hover:text-heading">Features</Link>
           <Link href="/for-institutions" className="font-medium text-heading">For institutions</Link>
         </nav>
-        <Link href="/get-started" className="inline-flex h-9 items-center rounded-lg bg-sidebar px-4 text-[13px] font-semibold text-white hover:opacity-90">
+        <Link href="/get-started" className="btn-press inline-flex h-9 items-center rounded-lg bg-sidebar px-4 text-[13px] font-semibold text-white hover:opacity-90">
           Get started
         </Link>
       </header>
@@ -53,7 +53,7 @@ export default function ForInstitutions() {
 
         <div className="mt-8 rounded-xl border border-cardline bg-card p-6 text-center">
           <p className="text-[14px] text-body">Talk to us. Tell us how many courses and rooms you manage and we will tell you what a first run looks like.</p>
-          <Link href="/create-institution" className="mt-4 inline-flex h-11 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover">
+          <Link href="/create-institution" className="btn-press mt-4 inline-flex h-11 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover">
             Create your institution
           </Link>
         </div>

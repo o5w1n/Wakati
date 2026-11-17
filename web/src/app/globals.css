@@ -2,7 +2,7 @@
 
 @theme {
   --color-primary: #C93834;
-  --color-primary-hover: #C93834;
+  --color-primary-hover: #b02e2a;
   --color-sidebar: #141b34;
   --color-sidebar-active: #C93834;
   --color-page: #f6f7fd;
@@ -26,11 +26,36 @@
   --color-canvas-2: #eef0f9;
   --color-line: #e6e8f2;
   --color-indigo-deep: #C93834;
-  --color-indigo-hover: #C93834;
+  --color-indigo-hover: #b02e2a;
 
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
   --radius-card: 12px;
   --radius-input: 8px;
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+button, a, [role="button"] {
+  touch-action: manipulation;
+}
+
+button, [role="button"] {
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+@media (pointer: coarse) {
+  input, textarea, select {
+    font-size: 16px;
+  }
 }
 
 body {
@@ -44,6 +69,64 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: 2px;
+}
+
+.btn-press {
+  transition:
+    transform 160ms var(--ease-out),
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    opacity 150ms ease;
+}
+
+.btn-press:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.popover-enter {
+  transform-origin: top left;
+  opacity: 1;
+  transform: scale(1) translateY(0);
+  transition:
+    opacity 150ms var(--ease-out),
+    transform 150ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.95) translateY(-2px);
+  }
+}
+
+.modal-backdrop {
+  opacity: 1;
+  transition: opacity 200ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+  }
+}
+
+.modal-panel {
+  transform-origin: center;
+  opacity: 1;
+  transform: scale(1);
+  transition:
+    opacity 220ms var(--ease-out),
+    transform 220ms var(--ease-out);
+  @starting-style {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-press:active:not(:disabled) {
+    transform: none;
+  }
+  .popover-enter,
+  .modal-panel {
+    transition: opacity 150ms ease;
+    transform: none !important;
+  }
 }
 
 .tt-scroll::-webkit-scrollbar { height: 8px; width: 8px; }

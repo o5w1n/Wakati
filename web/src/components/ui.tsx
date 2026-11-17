@@ -47,7 +47,7 @@ export function Pill({ tone, children }: { tone: "ok" | "warn" | "bad" | "neutra
     accent: "bg-primary text-white",
   };
   return (
-    <span className={cn("inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium", map[tone])}>
+    <span className={cn("inline-flex shrink-0 items-center whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-medium", map[tone])}>
       {children}
     </span>
   );
@@ -60,7 +60,7 @@ export function MetricCard({ label, value, sub }: { label: string; value: string
   return (
     <div className="rounded-xl border border-cardline bg-card px-4 py-3 shadow-[0_1px_2px_rgba(17,24,39,0.04)]">
       <div className="text-[13px] text-body">{label}</div>
-      <div className="mt-1 text-xl font-bold text-heading">{value}</div>
+      <div className="mt-1 text-xl font-bold tabular-nums text-heading">{value}</div>
       {sub && <div className="mt-0.5 text-xs text-muted">{sub}</div>}
     </div>
   );
@@ -104,7 +104,7 @@ export const inputWithIconCls =
   "h-10 w-full rounded-lg border border-cardline bg-card py-2 pl-9 pr-3 text-[13px] text-heading outline-none transition-colors placeholder:text-muted focus:border-primary";
 
 export const btnPrimaryCls =
-  "inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-white transition-colors hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50";
+  "btn-press inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-primary px-4 text-[13px] font-semibold text-white hover:bg-primary-hover disabled:cursor-not-allowed disabled:opacity-50";
 
 export const btnSecondaryCls =
-  "inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-primary bg-card px-4 text-[13px] font-semibold text-primary transition-colors hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50";
+  "btn-press inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border border-primary bg-card px-4 text-[13px] font-semibold text-primary hover:bg-primary/5 disabled:cursor-not-allowed disabled:opacity-50";

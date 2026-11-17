@@ -59,13 +59,13 @@ export async function NotifList({ role, active, heading, revalidate }: NotifRole
                 !n.read && "border-l-2 border-l-primary"
               )}
             >
-              <Bell size={16} className={n.read ? "mt-0.5 text-muted" : "mt-0.5 text-primary"} />
+              <Bell size={16} className={cn("mt-0.5 shrink-0", n.read ? "text-muted" : "text-primary")} />
               <span className="min-w-0">
                 <span className="flex items-center gap-2 text-[13px] font-medium text-heading">
                   {n.title}
                   {!n.read && <StatusBadge tone="accent">new</StatusBadge>}
                 </span>
-                <span className="mt-0.5 block text-[13px] text-muted">{n.body}</span>
+                <span className="mt-0.5 block break-words text-[13px] text-muted">{n.body}</span>
                 <span className="mt-1 block text-xs text-muted">{new Date(n.created_at).toLocaleString()}</span>
               </span>
             </button>

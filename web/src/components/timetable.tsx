@@ -76,17 +76,17 @@ export function TimetableCell({
           <Lock size={11} />
         </span>
       )}
-      <span className="pr-4 text-[12px] font-bold leading-tight text-heading">
+      <span className="truncate pr-4 text-[12px] font-bold leading-tight text-heading">
         {session.courseCodes.join(" / ")}
       </span>
       <span className="truncate text-[12px] leading-tight text-body">{session.title}</span>
-      <span className="mt-0.5 flex items-center gap-1.5 text-[11px] leading-tight text-body">
-        <span className={cn("h-1.5 w-1.5 rounded-full", DOT[status === "empty" ? "ok" : status])} aria-hidden />
-        {session.lecturer}
+      <span className="mt-0.5 flex min-w-0 items-center gap-1.5 text-[11px] leading-tight text-body">
+        <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", DOT[status === "empty" ? "ok" : status])} aria-hidden />
+        <span className="truncate">{session.lecturer}</span>
       </span>
-      <span className="flex items-center gap-1.5 text-[11px] leading-tight text-body">
-        <span className={cn("h-1.5 w-1.5 rounded-full", DOT[status === "empty" ? "ok" : status])} aria-hidden />
-        <strong className="font-semibold text-heading">{session.room}</strong>
+      <span className="flex min-w-0 items-center gap-1.5 text-[11px] leading-tight text-body">
+        <span className={cn("h-1.5 w-1.5 shrink-0 rounded-full", DOT[status === "empty" ? "ok" : status])} aria-hidden />
+        <strong className="truncate font-semibold text-heading">{session.room}</strong>
       </span>
       {(status === "warn" || status === "bad") && reason && (
         <span className="sr-only">{reason}</span>
@@ -99,7 +99,7 @@ export function TimetableCell({
 export function ClashPopover({ tone, title, reason }: { tone: "bad" | "warn"; title: string; reason: string }) {
   const col = tone === "bad" ? "text-bad-text" : "text-warn-text";
   return (
-    <div className="pointer-events-none absolute z-20 w-56 rounded-xl border border-cardline bg-card p-3 shadow-[0_8px_24px_rgba(17,24,39,0.12)]">
+    <div className="popover-enter pointer-events-none absolute left-1 top-full z-20 mt-1.5 w-56 rounded-xl border border-cardline bg-card p-3 shadow-[0_8px_24px_rgba(17,24,39,0.12)]">
       <div className={cn("flex items-center gap-1.5 text-[13px] font-bold", col)}>
         <AlertTriangle size={14} strokeWidth={2.25} aria-hidden />
         {title}
@@ -140,7 +140,7 @@ export function TimetableGrid({
         <tbody>
           {periods.map((p, pi) => (
             <tr key={p.index}>
-              <td className="whitespace-nowrap px-3 py-2 align-top text-[12px] font-medium text-body">
+              <td className="whitespace-nowrap px-3 py-2 align-top text-[12px] font-medium tabular-nums text-body">
                 {p.label}
               </td>
               {days.map((d) => {

@@ -29,11 +29,11 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
-      <div className="max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-xl border border-cardline bg-card p-6" onClick={(e) => e.stopPropagation()}>
+    <div className="modal-backdrop fixed inset-0 z-50 grid place-items-center bg-black/40 p-4" onClick={onClose}>
+      <div className="modal-panel max-h-[85vh] w-full max-w-lg overflow-y-auto rounded-xl border border-cardline bg-card p-6" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-heading">Import CSVs</h2>
-          <button onClick={onClose} aria-label="Close"><X size={16} /></button>
+          <button onClick={onClose} aria-label="Close" className="btn-press rounded p-1 text-body hover:text-heading"><X size={16} /></button>
         </div>
         <p className="mt-1 text-[13px] text-muted">
           Upload any of the 13 template files. Headers are validated; rows link by code, not by id.

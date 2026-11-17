@@ -1,175 +1,205 @@
-# Wakati Landing Page — Reviewable PR & Copy Spec
+# Wakati Landing Page — PR & Copy Spec
 
-> **Status:** Draft for review (no changes made to `web/src/app/page.tsx` or `web/src/app/globals.css`)  
-> **Design system:** Monochrome-first (`#ffffff` paper, `#f7f7f5` canvas, `#111111` ink, `#777777` muted, `#e5e5e3` 1px hairline borders, `0px` border radius), `--color-indigo-deep` (`#4338ca`) primary actions, `Inter` / `Geist` sans, `max-w-6xl` container.  
-> **Main CTA:** `Request a demo` (repeated at top, opening screen, and closing CTA).
+> **Status:** Synced with `web/src/app/page.tsx`, `web/src/app/globals.css`, and `web/src/components/brand.tsx`  
+> **Design system:** `--color-page` (`#f6f7fd`), `--color-card` (`#ffffff`), `--color-cardline` (`#e6e8f2`), `--color-lavender` (`#dad7fb`), `--color-primary` (`#C93834`), `--color-primary-hover` (`#b02e2a`), `--color-sidebar` (`#141b34`), `--color-heading` (`#111827`), `--color-body` (`#4b5563`), `--color-muted` (`#9ca3af`), `--radius-card` (`12px` / `rounded-xl`), `--radius-input` (`8px` / `rounded-lg`), `Inter` sans, `max-w-6xl` container on `min-h-svh bg-page`.  
+> **Main CTAs:** `Get started` (`/get-started` in header) and `Create your institution` (`/create-institution` in hero and closing CTA).
 
 ---
 
 ## 1. Header
 
-- **Logo:** `Wakati` (`text-[15px] font-semibold tracking-tight text-ink`)
-- **Navigation links (`text-[13px] text-muted hover:text-ink`):**
-  - `Product` (`#what-it-does`)
-  - `Who it’s for` (`#who-its-for`)
-  - `Pilot` (`#pilot`)
-  - `About` (`#about`)
-- **Primary button (`btnPrimaryCls`, `bg-indigo-deep`):**
-  - `Request a demo`
-
-> *Note:* Keep existing `Sign in` accessible from the footer or a subtle text link if needed, so the header maintains one clear action button.
+- **Logo (`<Logo />`):** Stylized W `<LogoMark />` SVG in `text-primary` + `Wakati` (`text-[17px] font-semibold tracking-tight text-heading`), linking to `/`.
+- **Navigation links (`hidden items-center gap-7 text-sm text-body md:flex`, `aria-label="Primary"`):**
+  - `About` (`/about`)
+  - `Features` (`/features`)
+  - `For institutions` (`/for-institutions`)
+- **Actions:**
+  - Text link (`text-sm text-body hover:text-heading`): `Sign in` (`/login`)
+  - Primary header button (`btn-press inline-flex h-9 items-center rounded-lg bg-sidebar px-4 text-[13px] font-semibold text-white hover:opacity-90`): `Get started` (`/get-started`)
 
 ---
 
-## 2. Opening Screen
+## 2. Opening Screen (Hero)
 
-- **Layout:** Asymmetric or clean single-column hero on `bg-paper` with the live `TimetableGrid` (or high-resolution screenshot of `/registry/editor`) framed in `border border-line` below/beside it.
-- **Headline (`text-3xl md:text-[40px] md:leading-[1.15] font-semibold tracking-tight text-ink`):**
-  > **Clash-free lecture and exam timetables for university registrars and exam officers.**
-- **Supporting line (`text-[15px] leading-relaxed text-muted`):**
-  > No more weeks of clashes, manual edits, and 1-hour compromises — generated in minutes, fixed by drag and drop, published to every student and lecturer.
-- **Buttons (2 only):**
-  - Primary (`btnPrimaryCls`): `Request a demo`
-  - Secondary (`btnSecondaryCls`): `See how it works` (scrolls to `#what-it-does`)
-- **Product visual (real product, no stock image):**
-  - Live `TimetableGrid` or real screenshot from `/registry/editor` showing course codes, titles, tags (`Theory`, `Practical`, `Elective`, `Group`), lecturer names, and room codes in bold.
-
----
-
-## 3. Proof Strip
-
-- **Layout:** Full-width hairline band (`border-y border-line bg-canvas px-6 py-4`).
-- **Copy (plain, unpadded):**
-  > **Built for and piloted at Academic City University** — open to every institution.
-
-*(No placeholder partner logos. Add additional institutions only as they onboard.)*
+- **Layout:** Two-column grid (`grid items-center gap-10 py-14 md:grid-cols-2 md:py-20`) inside `max-w-6xl`.
+- **Eyebrow (`text-[13px] font-semibold uppercase tracking-wide text-primary`):**
+  > For university registries and timetable offices
+- **Headline (`mt-2 text-[40px] font-bold leading-[1.08] tracking-tight text-heading md:text-[52px]`):**
+  > **A clash-free semester timetable, built in minutes.**
+- **Supporting line (`mt-4 max-w-md text-[15px] leading-relaxed text-body`):**
+  > Wakati places every class using your courses, lecturers and rooms, and checks every rule as it goes. When something cannot fit, it tells you exactly why.
+- **Actions (2):**
+  - Primary (`btn-press inline-flex h-11 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover`): `Create your institution` (`/create-institution`)
+  - Secondary (`text-sm font-medium text-primary hover:underline`): `See how it works` (`/features`)
+- **Checklist (`POINTS`):**
+  - `Two-hour classes stay two hours`
+  - `No lecturer, room or student group booked twice`
+  - `A plain-language reason for anything it cannot place`
+- **Hero Visual (right column, `hidden md:block`, `aria-hidden`):**
+  - Lavender circle (`bg-lavender/70`) behind a `rounded-l-3xl` gradient panel (`bg-gradient-to-br from-sidebar via-sidebar to-primary`) with a geometric campus building `<svg>` (`text-white/25`) and caption:
+    - **Academic City University**
+    - Timetabled with Wakati
 
 ---
 
-## 4. The Problem, in Plain Words
+## 3. The Problem
 
-- **Section heading:** `Why semester timetabling breaks`
-- **Layout:** 3-column hairline grid (`grid gap-px border border-line bg-line md:grid-cols-3`, `bg-paper p-6`), matching the current card grid style.
-
-1. **Clashes slip through manual placement**  
-   Coordinators place sessions by hand across Level 100 to Level 400, cross-listed courses, and electives. One missed overlap double-books a room, a lecturer, or a student group.
-
-2. **Two-hour classes get cut to one**  
-   When no clean two-period block is left on the sheet, required two-hour sessions are shortened just to make the grid fit.
-
-3. **Every late change creates confusion**  
-   Re-sending updated PDFs and messages after publishing leaves lecturers and students checking old versions or walking into occupied rooms.
+- **Section heading:** `Hand-built timetables fail in the same few places`
+- **Layout:** Single-column prose (`max-w-2xl space-y-3 text-[14px] leading-relaxed text-body`).
+- **Copy:**
+  - Most registries still place classes one at a time in a spreadsheet. Nothing checks the work as it grows, so clashes turn up in the first week of teaching.
+  - When no clean two-hour block can be found, a two-hour class is quietly cut to one. Lecturers’ availability is collected by phone and forgotten by the time the grid is built. And one room change can mean redoing half the week.
+  - **Wakati takes over the part that is slow and easy to get wrong, and leaves the decisions with you.**
 
 ---
 
-## 5. What It Does
+## 4. What It Does (`WHAT`)
 
-- **Section heading (`#what-it-does`):** `From semester setup to published timetable`
-- **Layout:** Alternating or stacked feature rows on `bg-paper` with `border border-line` screenshot frames. Verb-led headlines, one sentence each, plain outcomes.
+- **Section heading:** `Everything between your course list and a published timetable`
+- **Layout:** 3-column card grid (`grid gap-4 md:grid-cols-2 lg:grid-cols-3`, `rounded-xl border border-cardline bg-card p-5`).
 
-1. **Set up once, reuse every semester**  
-   Import lecturers, rooms, courses, and student cohorts from Excel or CSV, catch impossible room or capacity inputs before solving, and carry them forward to the next semester with no re-entry.  
-   - *Screenshot:* `/registry/master` (Master data & Excel/CSV import with row-level checks)
+1. **Builds the whole timetable**  
+   Add your courses, lecturers and rooms. Wakati places every session so that no lecturer, room or student group is in two places at once, across every programme and level.
 
-2. **Generate**  
-   The constraint solver places every lecture and exam session, and lists plain-language reasons for anything that cannot fit instead of cryptic error codes.  
-   - *Screenshot:* `/registry/generate` (Solver run, quality score, and conflict report)
+2. **Keeps two-hour classes whole**  
+   Class length is a requirement, not a hope. A two-period class gets two consecutive periods, with the break kept inside it, or Wakati tells you why it could not.
 
-3. **Edit by drag and drop**  
-   Drag any session on the timetable grid: slots turn green when valid, amber when breaking a preference, and red on a hard clash with the exact reason on hover.  
-   - *Screenshot:* `/registry/editor` (Drag-and-drop grid with green/amber/red slot feedback)
+3. **Explains what it cannot place**  
+   No vague error codes. You get a sentence: “No lab is free for two periods when all CS 300 students and Dr Mensah are free.” Then you decide what to change.
 
-4. **Publish to everyone**  
-   Move timetables from Draft to Under review to Published so students and lecturers see their personal schedules on their phones, while Registry exports PDF and Excel in the familiar cell layout.  
-   - *Screenshot:* `/registry/publish` paired with `/student/timetable`
+4. **Starts from lecturer availability**  
+   Lecturers mark when they are available, preferred or unavailable before anything is generated. The first draft already fits, so you are not fixing it by hand afterwards.
 
-5. **Handle daily changes**  
-   Lecturers can cancel a single class date to free the room for that day, and Registry can find free rooms and conflict-free slots for emergency classes in seconds.  
-   - *Screenshot:* `/lecturer/rooms` or `/registry/notifications`
+5. **Fits electives into fewer slots**  
+   Two Level 400 electives can share a slot when no student takes both. Wakati reads who chose what, so electives stop taking up the whole week and core classes get room.
+
+6. **Edit by dragging**  
+   Move a class to another slot or room. Green means it fits, amber means it breaks a preference, red means it breaks a rule. Hover to see which rule and why.
 
 ---
 
-## 6. Who It’s For
+## 5. How It Works (`STEPS`)
 
-- **Section heading (`#who-its-for`):** `Built for every role on campus`
-- **Layout:** 3-column hairline grid (`grid gap-px border border-line bg-line md:grid-cols-3`, `bg-paper p-6`).
+- **Section heading:** `From setup to published in four steps`
+- **Layout:** 2-column ordered list (`ol`, `grid gap-4 md:grid-cols-2`, `rounded-xl border border-cardline bg-card p-5`).
 
-### Registry & Exam Officers
-Generate lecture and exam timetables in minutes, lock sessions that must not move, resolve clashes visually with live green/amber/red feedback, and keep a full audit log of every post-publish change.
+1. **Step 1 — Set up once.**  
+   Add your lecturers, rooms, courses and groups. They stay saved. Next semester, you start from what you already have.
+
+2. **Step 2 — Collect availability.**  
+   Open a window and lecturers fill in a weekly grid. You see who has submitted and who has not.
+
+3. **Step 3 — Generate and review.**  
+   Wakati checks your inputs first, then builds the timetable. You get a quality score and a list of anything it could not place.
+
+4. **Step 4 — Publish.**  
+   Review, adjust, then publish. Students and lecturers see their own timetables straight away, on a phone or a computer.
+
+---
+
+## 6. Day-to-Day Operations (`AFTER`)
+
+- **Section heading:** `The timetable keeps working after week one`
+- **Layout:** 2-column card grid (`grid gap-4 md:grid-cols-2`, `rounded-xl border border-cardline bg-card p-5`).
+
+1. **A lecturer cancels a class.**  
+   They do it in Wakati, with a reason. The room shows as free for that day, and the students in that class are told.
+
+2. **An emergency class comes up.**  
+   Registry picks a date and time and sees every room that is free. Wakati also shows whether the lecturer and the students are free, so you do not find the clash afterwards.
+
+3. **Anyone can see which rooms are free.**  
+   Students and lecturers can check a room for a given period. They cannot book it, and the page says so.
+
+4. **Every change is on record.**  
+   After publishing, each change is saved with who made it, when and why. You can compare two versions and see exactly which classes moved.
+
+---
+
+## 7. Who It’s For (`WHO`)
+
+- **Section heading:** `One system, three views`
+- **Layout:** 3-column card grid (`grid gap-4 md:grid-cols-3`, `rounded-xl border border-cardline bg-card p-5`).
+
+### Registry and timetable offices
+Set up the semester, generate, edit and publish. Find rooms for emergency classes. See every cohort, lecturer and room.
 
 ### Lecturers
-Submit availability preferences before the semester starts, view personal teaching and invigilation schedules on any device, cancel a single class date when needed, and check free rooms across campus.
+Set your availability once a semester. See your own timetable and any room’s timetable. Cancel a class when you cannot teach it.
 
 ### Students
-See only the sessions that apply to you—your cohort’s core classes, your chosen electives, and your assigned groups—plus exam dates and free rooms, without digging through master spreadsheets.
+See your timetable for your programme, electives and group only. Check which rooms are free. Open it on a phone without eating your data.
 
 ---
 
-## 7. Results & Quote
+## 8. Exams & Multi-Institution Isolation
 
-> [!IMPORTANT]
-> **Do not invent proof.** Replace the bracketed placeholders below only with verified measurements and a signed-off quote from the Academic City pilot before publishing.
+- **Section heading:** `Exam timetables from the same data`
+  > You have already entered the courses, rooms and student registrations. Wakati uses them to build the exam timetable too: no student with two papers in one period, no room or invigilator booked twice, large exams split across rooms where needed.
 
-- **Layout:** Metric strip (`MetricCard` style: `border border-line bg-paper px-4 py-3`) + 1 bordered quote block (`border-l-2 border-indigo-deep pl-4`).
-- **Metrics (fill from pilot):**
-  - `[X] minutes` — Time to generate a full semester draft (down from `[Y] weeks` of manual placement)
-  - `0` — Hard room, lecturer, or student clashes on published timetables
-  - `[N] sessions` — Placed with full required period lengths preserved
-- **User Quote (fill from pilot):**
-  > “[Exact quote from pilot user on how Wakati changed semester or exam scheduling.]”  
-  > — **[Full Name]**, [Role, e.g., Registrar / Timetable Coordinator, Academic City University]
+- **Section heading:** `Built for more than one university`
+  > Each institution has its own days, periods, rooms and people, kept apart from every other institution on Wakati. One institution can never see another’s data.
 
 ---
 
-## 8. Trust & Data Handling
+## 9. Frequently Asked Questions (`FAQS`)
 
-- **Section heading (`#pilot`):** `How your institution’s data is handled`
-- **Layout:** 2×2 hairline grid (`grid gap-px border border-line bg-line md:grid-cols-2`, `bg-paper p-6`).
+- **Section heading:** `Frequently asked questions`
+- **Layout:** 2-column card grid (`grid gap-4 md:grid-cols-2`, `rounded-xl border border-cardline bg-card p-5`).
 
-- **Where data is stored**  
-  Hosted in PostgreSQL with Row-Level Security enabled. Every record is scoped to its university, so one institution can never read or modify another’s data.
+1. **Can we import what we already have?**  
+   Yes. Lecturers, rooms, courses and student electives import from Excel or CSV. If a row has a problem, you are told which row and what is wrong.
 
-- **Who can see what**  
-  Role-based access separates Platform Admins, Registry, Heads of Department, Lecturers, and Students. Draft timetables stay hidden from students and lecturers until Registry moves a version to Published, and every post-publish edit is recorded in an audit log.
+2. **What if a full timetable is not possible?**  
+   Wakati places as much as it can and lists every class it could not place, with the reason for each. Nothing is silently dropped.
 
-- **How it connects to existing portals**  
-  Import lecturers, courses, rooms, and enrolments directly from Excel/CSV templates with row-level validation, export published grids to PDF and Excel in your existing cell layout, and connect institutional login via an SSO adapter.
+3. **Can we change the timetable after publishing?**  
+   Yes. Every change is saved as a new version with a reason, and the affected students and lecturers are notified.
 
-- **What support looks like**  
-  Hands-on onboarding with your Registry team: we help format your first semester import, verify your period grid and room rules, and support your first live run from draft to publication.
+4. **Can students or lecturers book rooms?**  
+   No. They can see which rooms are free for a period. Only Registry can schedule a room for an extra class.
 
----
+5. **Does it work on phones?**  
+   Student and lecturer views do, and they are kept small for slow connections. The timetable editor is for desktop.
 
-## 9. Closing Call to Action
+6. **How is student data used?**  
+   Only to build and show timetables. Wakati follows Ghana’s Data Protection Act, 2012 (Act 843).
 
-- **Layout:** Centered or left-aligned bordered panel (`border border-line bg-canvas p-8 md:p-12`).
-- **Headline:** `See it with your own timetable data.`
-- **Supporting line:** `Send us one semester’s courses, rooms, and lecturers, and we’ll walk through a live clash-free draft together.`
-- **Button (`btnPrimaryCls`):** `Request a demo`
-
----
-
-## 10. Footer
-
-- **Layout:** `border-t border-line bg-paper` (`max-w-6xl mx-auto px-6 py-10`).
-- **About (`#about`):**
-  > **Wakati** — Built for Academic City University to replace weeks of manual spreadsheet scheduling and cryptic desktop tools, and open to every university that wants clash-free lecture and exam timetables.
-- **Links:**
-  - `About`
-  - `Contact`
-  - `Privacy policy`
-  - `Documentation`
+7. **Does it replace our student portal?**  
+   No. Wakati reads from and shows timetables in your portal where it can connect, and works as its own web page where it cannot.
 
 ---
 
-## Checklist Against Rules
+## 10. Closing Call to Action
 
-- [x] **Header:** Logo, 4 menu items (`Product`, `Who it’s for`, `Pilot`, `About`), 1 primary button (`Request a demo`).
-- [x] **Opening screen:** 1 plain headline (`[What it does] for [who uses it]`), 1 supporting line on the problem removed, 2 buttons (`Request a demo`, `See how it works`), real product visual.
-- [x] **Proof strip:** Plain single-institution statement (`Academic City University`), no padded logos.
-- [x] **Problem:** 3 concrete pain points grounded in `Campus Timetable Allocation Platform — Requirements.md`.
-- [x] **What it does:** Verb-led headlines, 1 sentence each, real route screenshots mapped, zero "AI-powered" or "intelligent" buzzwords.
-- [x] **Who it’s for:** Short blocks for Admins/Registry, Lecturers, and Students.
-- [x] **Results & quote:** Explicit placeholders flagged for real pilot numbers and a real user quote—no invented proof.
-- [x] **Trust:** Covers storage/RLS, role visibility + draft/publish gating, portal/Excel/SSO integration, and onboarding support.
-- [x] **Closing CTA & Footer:** Repeats `Request a demo` with a specific ask; footer includes About, Contact, Privacy policy, and Documentation.
+- **Layout:** Centered section (`py-12 text-center`).
+- **Headline (`text-2xl font-bold tracking-tight text-heading`):** `See your own timetable built`
+- **Supporting line (`mx-auto mt-2 max-w-md text-[14px] text-body`):** `Create your institution, import your data and generate a first draft. If something cannot be placed, you will know why.`
+- **Button (`btn-press mt-5 inline-flex h-11 items-center rounded-lg bg-primary px-5 text-sm font-semibold text-white hover:bg-primary-hover`):** `Create your institution` (`/create-institution`)
+
+---
+
+## 11. Footer
+
+- **Layout:** `border-t border-cardline`, inner container `mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-6 py-5 text-[13px] text-body`.
+- **Brand statement:** `Wakati: timetabling for universities.`
+- **Links (`aria-label="Footer"`):**
+  - `About` (`/about`)
+  - `Features` (`/features`)
+  - `For institutions` (`/for-institutions`)
+  - `Contact` (`/login`)
+
+---
+
+## Sync Checklist Against `web/src/app/page.tsx`
+
+- [x] **Header:** `<Logo />`, 3 nav items (`About`, `Features`, `For institutions`), `Sign in` link (`/login`), and `Get started` button (`/get-started`).
+- [x] **Opening screen:** Eyebrow, headline (`A clash-free semester timetable, built in minutes.`), supporting copy, 2 actions (`Create your institution` `/create-institution`, `See how it works` `/features`), 3 `POINTS` checklist items, and Academic City University visual panel.
+- [x] **Problem:** `Hand-built timetables fail in the same few places` (3 paragraphs).
+- [x] **What it does:** All 6 `WHAT` cards synced verbatim.
+- [x] **How it works:** All 4 `STEPS` cards synced verbatim.
+- [x] **Day-to-day operations:** All 4 `AFTER` cards synced verbatim.
+- [x] **Who it’s for:** All 3 `WHO` role cards (`Registry and timetable offices`, `Lecturers`, `Students`).
+- [x] **Exams & multi-tenant isolation:** Both actual sections included; bracketed pilot quote and metric placeholders removed.
+- [x] **FAQs:** All 7 `FAQS` items synced verbatim.
+- [x] **Closing CTA & Footer:** `See your own timetable built` + `Create your institution` (`/create-institution`), and footer links (`About`, `Features`, `For institutions`, `Contact`).

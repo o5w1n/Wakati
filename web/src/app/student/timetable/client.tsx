@@ -25,7 +25,7 @@ export function StudentTimetableClient({ classes }: { classes: ClassItem[] }) {
   const list = classes.filter((c) => c.day === dayNum[day]);
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-md flex-col bg-page md:max-w-none md:bg-page">
+    <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col bg-page md:max-w-none md:bg-page">
       {/* mobile top bar */}
       <header className="flex items-center gap-3 border-b border-cardline bg-card px-4 py-3 md:hidden">
         <button aria-label="Menu" className="text-heading"><Menu size={20} /></button>
@@ -89,12 +89,12 @@ export function StudentTimetableClient({ classes }: { classes: ClassItem[] }) {
                   clash ? "border-warn-text/25 bg-warn-bg" : "border-ok-text/20 bg-ok-bg"
                 )}
               >
-                <div>
+                <div className="min-w-0">
                   <p className="text-[12px] text-body">{c.start} – {c.end}</p>
                   <p className="mt-0.5 text-[15px] font-bold text-heading">{c.code} – {c.title}</p>
                   <p className="mt-0.5 text-[13px] text-body">{c.room}</p>
                 </div>
-                <span className={cn("h-5 w-5 rounded-full border-4",
+                <span className={cn("h-5 w-5 shrink-0 rounded-full border-4",
                   clash ? "border-warn-text/40 bg-warn-bg" : "border-ok-text/40 bg-ok-bg")} aria-hidden />
               </li>
             );
@@ -103,7 +103,7 @@ export function StudentTimetableClient({ classes }: { classes: ClassItem[] }) {
       </div>
 
       {/* fixed mobile bottom tab bar */}
-      <nav aria-label="Mobile" className="sticky bottom-0 flex border-t border-cardline bg-card md:hidden">
+      <nav aria-label="Mobile" className="sticky bottom-0 flex border-t border-cardline bg-card pb-[env(safe-area-inset-bottom,0px)] md:hidden">
         {[
           { label: "Home", icon: Home, href: "/student", on: false },
           { label: "Timetable", icon: CalendarDays, href: "/student/timetable", on: true },

@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 
@@ -10,7 +10,19 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "Wakati — FET, but better",
-  description: "Generate clash-free lecture timetables in minutes, with full control.",
+  description:
+    "Generate clash-free lecture timetables in minutes, with full control.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#f6f7fd" },
+    { media: "(prefers-color-scheme: dark)", color: "#141b34" },
+  ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

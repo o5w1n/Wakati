@@ -15,7 +15,7 @@ async function run(_prev: { sent?: boolean; error?: string }, form: FormData) {
 export default function Reset() {
   const [result, action, pending] = useActionState(run, {} as { sent?: boolean; error?: string });
   return (
-    <div className="flex min-h-screen items-center justify-center bg-page px-4">
+    <div className="flex min-h-dvh items-center justify-center bg-page px-4">
       <div className="w-full max-w-sm rounded-xl border border-cardline bg-card p-8">
         <Logo />
         <h1 className="mt-4 text-xl font-bold text-heading">Reset password</h1>
