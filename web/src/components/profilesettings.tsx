@@ -1,10 +1,14 @@
-import { Shell } from "@/components/shell";
+﻿import { Shell } from "@/components/shell";
 import { PageHeader, Field } from "@/components/ui";
 import { inputCls, btnPrimaryCls } from "@/components/ui";
 import { supabaseServer } from "@/lib/supabase-server";
 import { updateProfileName } from "@/app/actions/profile";
 
-export async function ProfileSettingsLive({ role, active, path }: {
+export async function ProfileSettingsLive({
+  role,
+  active,
+  path,
+}: {
   role: "lecturer" | "student" | "hod";
   active: string;
   path: string;
@@ -20,8 +24,20 @@ export async function ProfileSettingsLive({ role, active, path }: {
       </Shell>
     );
   }
-  const { data: profile } = await sb.from("profiles").select("email,full_name").eq("id", user.id).single();
-  const p = (profile as { email: string; full_name: string | null } | null) ?? { email: user.email ?? "", full_name: null };
+  const { data: profile } = await sb
+    .from("profiles")
+    .select("email,full_name")
+    .eq("id", user.id)
+    .single();
+  const p = (profile as { email: string; full_name: string | null } | null) ?? {
+    email: user.email ?? "",
+    full_name: null,
+  };
+
+  async function saveName(formData: FormData) {
+    "use server";
+    await updateProfileName(String(formData.get("name") ?? ""), path);
+  }
 
   return (
     <Shell role={role} active={active}>
@@ -29,8 +45,10 @@ export async function ProfileSettingsLive({ role, active, path }: {
       <div className="grid max-w-2xl gap-3">
         <section className="rounded-xl border border-cardline bg-card p-4">
           <div className="mb-4 text-sm font-medium text-heading">Profile</div>
-          <form action={async (f: FormData) => { await updateProfileName(String(f.get("name") ?? ""), path); }} className="space-y-3">
-            <Field label="Full name"><input name="name" defaultValue={p.full_name ?? ""} className={inputCls} /></Field>
+          <form action={saveName} className="space-y-3">
+            <Field label="Full name">
+              <input name="name" defaultValue={p.full_name ?? ""} className={inputCls} />
+            </Field>
             <Field label="Email" hint="Managed by your institution — contact Registry to change it.">
               <input defaultValue={p.email} disabled className={`${inputCls} opacity-60`} />
             </Field>

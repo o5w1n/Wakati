@@ -1,4 +1,4 @@
-import { connection } from "next/server";
+﻿import { connection } from "next/server";
 import Link from "next/link";
 import { Shell } from "@/components/shell";
 import { PageHeader, StatusBadge } from "@/components/ui";
@@ -11,7 +11,10 @@ export const instant = false;
 export default async function Publish() {
   await connection();
   const sb = await supabaseServer();
-  const { data: semesters } = await sb.from("semesters").select("id,name").order("created_at", { ascending: false });
+  const { data: semesters } = await sb
+    .from("semesters")
+    .select("id,name")
+    .order("created_at", { ascending: false });
   const sems = (semesters ?? []) as { id: string; name: string }[];
   const active = sems[0];
   if (!active) {
@@ -26,8 +29,27 @@ export default async function Publish() {
     .select("id,status,quality_score,created_at,notes")
     .eq("semester_id", active.id)
     .order("created_at", { ascending: false });
-  const vers = (versions ?? []) as { id: string; status: string; quality_score: number | null; created_at: string; notes: string | null }[];
+  const vers = (versions ?? []) as {
+    id: string;
+    status: string;
+    quality_score: number | null;
+    created_at: string;
+    notes: string | null;
+  }[];
   const current = vers[0];
+
+  async function submitForReview() {
+    "use server";
+    if (current) await setVersionStatus(current.id, "review");
+  }
+  async function backToDraft() {
+    "use server";
+    if (current) await setVersionStatus(current.id, "draft");
+  }
+  async function publish() {
+    "use server";
+    if (current && active) await publishVersion(current.id, active.id);
+  }
 
   return (
     <Shell role="registry" active="/registry/publish">
@@ -36,16 +58,18 @@ export default async function Publish() {
         sub={`${active.name}${current ? ` · ${current.status} · score ${current.quality_score ?? "—"}` : ""}`}
         actions={
           current?.status === "draft" ? (
-            <form action={async () => { await setVersionStatus(current.id, "review"); }}>
+            <form action={submitForReview}>
               <button className={btnPrimaryCls}>Submit for review →</button>
             </form>
           ) : current?.status === "review" ? (
             <>
-              <form action={async () => { await setVersionStatus(current.id, "draft"); }}>
+              <form action={backToDraft}>
                 <button className={btnSecondaryCls}>Back to draft</button>
               </form>
-              <Link href="/registry/editor" className={btnSecondaryCls}>Open in editor</Link>
-              <form action={async () => { await publishVersion(current.id, active.id); }}>
+              <Link href="/registry/editor" className={btnSecondaryCls}>
+                Open in editor
+              </Link>
+              <form action={publish}>
                 <button className={btnPrimaryCls}>Publish</button>
               </form>
             </>
@@ -56,10 +80,19 @@ export default async function Publish() {
       <ol className="mb-6 flex items-center gap-0 text-[13px]">
         {(["Draft", "Under review", "Published"] as const).map((s, i) => {
           const idx = !current || current.status === "draft" ? 0 : current.status === "review" ? 1 : 2;
-          const done = i < idx, now = i === idx;
+          const done = i < idx;
+          const now = i === idx;
           return (
             <li key={s} className="flex items-center">
-              <span className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs font-medium ${done ? "border-primary bg-primary text-white" : now ? "border-primary text-primary" : "border-cardline text-muted"}`}>
+              <span
+                className={`flex h-6 w-6 items-center justify-center rounded-full border text-xs font-medium ${
+                  done
+                    ? "border-primary bg-primary text-white"
+                    : now
+                    ? "border-primary text-primary"
+                    : "border-cardline text-muted"
+                }`}
+              >
                 {done ? "✓" : i + 1}
               </span>
               <span className={`mx-2 ${now ? "font-medium text-heading" : "text-muted"}`}>{s}</span>
@@ -71,8 +104,8 @@ export default async function Publish() {
 
       {current?.status === "published" && (
         <div className="mb-4 border border-cardline border-l-4 border-l-primary bg-card p-4 text-[13px]">
-          <span className="font-medium">Published.</span> Lecturers and students can now see their
-          personal timetables. Previous versions are archived and restorable.
+          <span className="font-medium">Published.</span> Lecturers and students can now see their personal timetables.
+          Previous versions are archived and restorable.
         </div>
       )}
 
@@ -85,9 +118,14 @@ export default async function Publish() {
             <div key={v.id} className="border-b border-cardline py-2.5 text-[13px] last:border-0">
               <div className="flex items-center justify-between">
                 <span className="font-medium text-heading">{new Date(v.created_at).toLocaleString()}</span>
-                <StatusBadge tone={v.status === "published" ? "ok" : v.status === "draft" ? "warn" : "neutral"}>{v.status}</StatusBadge>
+                <StatusBadge tone={v.status === "published" ? "ok" : v.status === "draft" ? "warn" : "neutral"}>
+                  {v.status}
+                </StatusBadge>
               </div>
-              <div className="mt-0.5 text-muted">score {v.quality_score ?? "—"}{v.notes ? ` · ${v.notes}` : ""}</div>
+              <div className="mt-0.5 text-muted">
+                score {v.quality_score ?? "—"}
+                {v.notes ? ` · ${v.notes}` : ""}
+              </div>
             </div>
           ))
         )}

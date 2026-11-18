@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { redirect } from "next/navigation";
 import { supabaseServer } from "@/lib/supabase-server";
@@ -80,4 +80,19 @@ export async function requestJoin(form: FormData) {
   });
   if (error) return { error: error.message };
   redirect("/signup/pending");
+}
+
+export async function redeemAccessCodeAction(form: FormData) {
+  const sb = await supabaseServer();
+  const institutionCode = String(form.get("institution_code") ?? "").trim();
+  const accessCode = String(form.get("access_code") ?? "").trim();
+  const fullName = String(form.get("full_name") ?? "").trim() || null;
+  if (!institutionCode || !accessCode) return { error: "Institution code and access code are required." };
+  const { error } = await sb.rpc("redeem_access_code", {
+    p_institution_code: institutionCode,
+    p_access_code: accessCode,
+    p_full_name: fullName,
+  });
+  if (error) return { error: error.message };
+  redirect("/post-login");
 }

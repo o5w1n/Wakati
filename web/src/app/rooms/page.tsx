@@ -1,42 +1,58 @@
-import { connection } from "next/server";
+﻿import { connection } from "next/server";
+import { Shell } from "@/components/shell";
+import { PageHeader, EmptyState } from "@/components/ui";
 import { supabaseServer } from "@/lib/supabase-server";
-import { RoomFinderClient, type FinderRoom } from "./finder-client";
+import { TimetableExplorer } from "@/components/timetable-explorer";
+import { loadSemesterTimetableData } from "@/lib/timetable-data";
 
 export const instant = false;
-
-const DAY_MAP: Record<string, number> = { Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5 };
 
 export default async function RoomFinder() {
   await connection();
   const sb = await supabaseServer();
-  const {
-    data: { user },
-  } = await sb.auth.getUser();
-
-  let rooms: FinderRoom[] = [];
-  const taken = new Set<string>();
-  if (user) {
-    const { data: profile } = await sb.from("profiles").select("university_id").eq("id", user.id).single();
-    const uni = (profile as { university_id: string } | null)?.university_id;
-    if (uni) {
-      const { data: rms } = await sb.from("rooms").select("code,type,capacity").eq("university_id", uni).eq("active", true).order("code");
-      rooms = ((rms ?? []) as { code: string; type: string }[]).map((r) => ({ code: r.code, name: `${r.type} ${r.code}` }));
-      const { data: sems } = await sb.from("semesters").select("id").eq("university_id", uni).order("created_at", { ascending: false }).limit(1);
-      const sem = ((sems ?? []) as { id: string }[])[0];
-      if (sem) {
-        const { data: vers } = await sb.from("timetable_versions").select("id").eq("semester_id", sem.id).order("created_at", { ascending: false }).limit(1);
-        const ver = ((vers ?? []) as { id: string }[])[0];
-        if (ver) {
-          // conservative: mark rooms used on Mon 8–10 as taken so the finder has something to filter
-          const { data: pl } = await sb.from("placements").select("room_id,rooms(code)").eq("version_id", ver.id).eq("day_of_week", DAY_MAP.Mon).eq("start_period", 1);
-          for (const p of ((pl ?? []) as unknown as { rooms: { code: string } | { code: string }[] | null }[])) {
-            const r = Array.isArray(p.rooms) ? p.rooms[0] : p.rooms;
-            if (r) taken.add(r.code);
-          }
-        }
-      }
-    }
+  const { data: { user } } = await sb.auth.getUser();
+  if (!user) {
+    return (
+      <div className="mx-auto max-w-5xl px-4 py-8">
+        <EmptyState title="Sign in required" sub="Sign in to view timetables by location." />
+      </div>
+    );
   }
+  const { data: profile } = await sb.from("profiles").select("university_id,role").eq("id", user.id).single();
+  const uni = (profile as { university_id: string | null } | null)?.university_id;
+  const role = (profile as { role: string | null } | null)?.role || "student";
+  const shellRole = role === "timetable_admin" ? "registry" : role === "super_admin" ? "superadmin" : (role as any);
 
-  return <RoomFinderClient rooms={rooms} taken={taken} />;
+  let semId: string | null = null;
+  if (uni) {
+    const { data: sems } = await sb.from("semesters").select("id,status,created_at").eq("university_id", uni).order("created_at", { ascending: false });
+    const list = (sems ?? []) as { id: string; status: string }[];
+    semId = (list.find((s) => s.status === "published") || list[0])?.id ?? null;
+  }
+  if (!semId) {
+    return (
+      <Shell role={shellRole === "registry" || shellRole === "hod" || shellRole === "lecturer" || shellRole === "student" || shellRole === "superadmin" ? shellRole : "student"} active="/rooms">
+        <PageHeader title="Timetable by Location" sub="No semester available." />
+        <EmptyState title="No semester" sub="No timetable data available yet." />
+      </Shell>
+    );
+  }
+  const data = await loadSemesterTimetableData(semId);
+  return (
+    <Shell role={shellRole === "registry" || shellRole === "hod" || shellRole === "lecturer" || shellRole === "student" || shellRole === "superadmin" ? shellRole : "student"} active="/rooms">
+      <PageHeader title="Timetable by Location" sub="Search what class happens at what location at what time, or browse each room’s schedule." />
+      {data.versionId ? (
+        <TimetableExplorer
+          placements={data.placements}
+          periods={data.periods}
+          days={data.days}
+          options={data.options}
+          showRoomView
+          title="Room/location timetable and search"
+        />
+      ) : (
+        <EmptyState title="No timetable yet" sub="No timetable version is available." />
+      )}
+    </Shell>
+  );
 }

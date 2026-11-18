@@ -19,6 +19,16 @@ export default async function InstitutionDetail({ params }: { params: Promise<{ 
       </Shell>
     );
   }
+
+  async function activate() {
+    "use server";
+    await setInstitutionStatus(u.id, "active");
+  }
+  async function suspend() {
+    "use server";
+    await setInstitutionStatus(u.id, "suspended");
+  }
+
   const { count: members } = await sb.from("profiles").select("id", { count: "exact", head: true }).eq("university_id", u.id);
   const { count: semesters } = await sb.from("semesters").select("id", { count: "exact", head: true }).eq("university_id", u.id);
   const { data: admins } = await sb.from("profiles").select("email,full_name").eq("university_id", u.id).eq("role", "timetable_admin").limit(3);
@@ -34,19 +44,19 @@ export default async function InstitutionDetail({ params }: { params: Promise<{ 
             <Link href="/admin" className={btnSecondaryCls}>← All institutions</Link>
             {u.status === "pending" ? (
               <>
-                <form action={async () => { await setInstitutionStatus(u.id, "active"); }}>
+                <form action={activate}>
                   <button className={btnPrimaryCls}>Approve & activate</button>
                 </form>
-                <form action={async () => { await setInstitutionStatus(u.id, "suspended"); }}>
+                <form action={suspend}>
                   <button className={btnSecondaryCls}>Reject</button>
                 </form>
               </>
             ) : u.status === "active" ? (
-              <form action={async () => { await setInstitutionStatus(u.id, "suspended"); }}>
+              <form action={suspend}>
                 <button className={btnSecondaryCls}>Suspend</button>
               </form>
             ) : (
-              <form action={async () => { await setInstitutionStatus(u.id, "active"); }}>
+              <form action={activate}>
                 <button className={btnPrimaryCls}>Reactivate</button>
               </form>
             )}
@@ -70,7 +80,7 @@ export default async function InstitutionDetail({ params }: { params: Promise<{ 
       <div className="grid gap-3 lg:grid-cols-2">
         <section className="rounded-xl border border-cardline bg-card p-4">
           <div className="mb-4 text-sm font-medium text-heading">Institution settings</div>
-          <form action={async (f: FormData) => { await updateInstitution(f); }} className="space-y-3">
+          <form action={updateInstitution} className="space-y-3">
             <input type="hidden" name="id" value={u.id} />
             <Field label="Name">
               <input name="name" defaultValue={u.name} className={inputCls} />
